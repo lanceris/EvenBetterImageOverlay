@@ -1,0 +1,16 @@
+ManifestFileVersion: 0
+CRC: 735710543
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: f1c174a1cf831b1b5c887aa07ae78ab6
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 80729077cb39806c86b5c10073f074fb
+HashAppended: 0
+ClassTypes:
+- Class: 48
+  Script: {instanceID: 0}
+Assets:
+- Assets/OverlayShader.shader
+Dependencies: []
