@@ -1,6 +1,7 @@
 ﻿using ICities;
 using UnityEngine;
 using System.IO;
+using System;
 
 namespace EvenBetterImageOverlay
 {
@@ -19,10 +20,13 @@ namespace EvenBetterImageOverlay
 
     public class LoadingExtension : LoadingExtensionBase
     {
+        public static GameObject go;
+        public Config config;
+
         public override void OnLevelLoaded(LoadMode mode)
         {
 
-            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            go = GameObject.CreatePrimitive(PrimitiveType.Plane);
 
             Texture2D tex = new Texture2D(2, 2);
 
@@ -42,97 +46,128 @@ namespace EvenBetterImageOverlay
 
             go.GetComponent<Renderer>().material = ShaderLoad.shader;
 
-            go.AddComponent<Movement>();
+            go.AddComponent<Mod>();
+            go.AddComponent<Config>();
 
-            go.transform.position = new Vector3(0f, 200f, 0f);
-            go.transform.localScale = new Vector3(175f, 1f, 175f);
-            go.transform.eulerAngles = new Vector3(0f, 180f, 0f);
-            go.transform.SetParent(Camera.main.transform.parent);
+            /*
+            go.transform.position = new Vector3(config.pos.x, config.pos.y, config.pos.z);
+            go.transform.localScale = new Vector3(config.scl.x, config.scl.y, config.scl.z);
+            go.transform.eulerAngles = new Vector3(config.rot.x, config.rot.y, config.rot.z);
+            go.transform.SetParent(Camera.main.transform.parent);*/
+        }
+
+        public override void OnLevelUnloading()
+        {
+            go.GetComponent<Config>();
+            Config.ins.SaveConfig();
         }
 
     }
 
-    public class Movement : MonoBehaviour
+    public class Mod : MonoBehaviour
     {
-
+        //track go location
         float srtSlowSpeedFactor = 0.3f;
+        public static Vector3 ps, rt, sc;
+        bool isMovable = true;
 
         void Update()
         {
+            ps = transform.position;
+            rt = transform.eulerAngles;
+            sc = transform.localScale;
+
             bool controlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
             float speedModifier = controlDown ? srtSlowSpeedFactor : 1.0f;
 
             // Image size (using keypad's plus and minus)
             Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
-            if (Input.GetKey(KeyCode.KeypadPlus))
+            if (isMovable && (Input.GetKey(KeyCode.KeypadPlus) || isShiftKeyDown && Input.GetKey(KeyCode.Plus)))
             {
                 transform.localScale += scaleDelta * speedModifier;
             }
 
-            else if (Input.GetKey(KeyCode.KeypadMinus))
+            else if (isMovable && (Input.GetKey(KeyCode.KeypadMinus) || isShiftKeyDown && Input.GetKey(KeyCode.Minus)))
             {
                 transform.localScale -= scaleDelta * speedModifier;
             }
 
             // Image rotation (using keypad 7 and 9)
-            Vector3 rotationDelta = new Vector3(0f, 0.5f, 0f) * speedModifier;
+            Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier;
 
-            if (Input.GetKey(KeyCode.Keypad7))
+            if (isMovable && (Input.GetKey(KeyCode.Keypad7) || isShiftKeyDown && Input.GetKey(KeyCode.Q)))
             {
                 transform.eulerAngles -= rotationDelta;
             }
 
-            else if (Input.GetKey(KeyCode.Keypad9))
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad9) || isShiftKeyDown && Input.GetKey(KeyCode.E)))
             {
                 transform.eulerAngles += rotationDelta;
             }
 
-            // Image position (using keypad arrows)
+            //rotate by 90 degree
+            else if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.LeftBracket)))
+            {
+                transform.eulerAngles -= rotationDelta * 90;
+            }
+            else if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.RightBracket)))
+            {
+                transform.eulerAngles += rotationDelta * 90;
+            }
+
+            //reset rotation to default
+            if (isMovable && (isShiftKeyDown && Input.GetKey(KeyCode.C)))
+            {
+                transform.eulerAngles = new Vector3(0f, 180f, 0f);
+            }
+
+                // Image position (using keypad arrows)
             float positionDelta = 400f * speedModifier * Time.deltaTime;
 
-            if (Input.GetKey(KeyCode.Keypad8)) // UP
+            if (isMovable && (Input.GetKey(KeyCode.Keypad8) || isShiftKeyDown && Input.GetKey(KeyCode.UpArrow))) // UP
             {
                 transform.position += new Vector3(0f, 0f, positionDelta);
             }
-            else if (Input.GetKey(KeyCode.Keypad2)) // DOWN
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad2) || isShiftKeyDown && Input.GetKey(KeyCode.DownArrow))) // DOWN
             {
                 transform.position += new Vector3(0f, 0f, -positionDelta);
             }
 
-            if (Input.GetKey(KeyCode.Keypad4)) // LEFT
+            if (isMovable && (Input.GetKey(KeyCode.Keypad4) || isShiftKeyDown && Input.GetKey(KeyCode.LeftArrow))) // LEFT
             {
                 transform.position += new Vector3(-positionDelta, 0f, 0f);
             }
-            else if (Input.GetKey(KeyCode.Keypad6)) // RIGHT
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad6) || isShiftKeyDown && Input.GetKey(KeyCode.RightArrow))) // RIGHT
             {
                 transform.position += new Vector3(positionDelta, 0f, 0f);
             }
 
             // Image toggle (using keypad's enter)
-            if (Input.GetKeyDown(KeyCode.KeypadEnter))
+            if (isMovable && (Input.GetKeyDown(KeyCode.KeypadEnter) || isShiftKeyDown && Input.GetKeyDown(KeyCode.Return)))
             {
                 gameObject.GetComponent<Renderer>().enabled = !gameObject.GetComponent<Renderer>().enabled;
             }
 
             // Image height (using keypad's zero and period)
-            if (Input.GetKey(KeyCode.KeypadPeriod))
+            if (isMovable && (Input.GetKey(KeyCode.KeypadPeriod) || isShiftKeyDown && Input.GetKey(KeyCode.X)))
             {
                 transform.position += new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
             }
 
-            else if (Input.GetKey(KeyCode.Keypad0))
+            else if ((isMovable && Input.GetKey(KeyCode.Keypad0) || isShiftKeyDown && Input.GetKey(KeyCode.Z)))
             {
                 transform.position -= new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
             }
 
-            // Reset overlay position to present camera position
-            if (Input.GetKey(KeyCode.Keypad5))
+            // lock position
+            if (Input.GetKeyDown(KeyCode.Keypad5) || isShiftKeyDown && Input.GetKeyDown(KeyCode.V))
             {
-                Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                transform.position = new Vector3(mousePos.x, transform.position.y, mousePos.z);
+                isMovable = !isMovable;
             }
         }
     }
+
 }
