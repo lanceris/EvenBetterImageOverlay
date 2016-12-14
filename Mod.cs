@@ -9,7 +9,7 @@ namespace EvenBetterImageOverlay
     {
         public string Description
         {
-            get { return "Overlays an image (located at [Steam Skylines Folder]/Files/overlay.png). Image can be controlled using the keypad."; }
+            get { return "Overlays an image (located at [Steam Skylines Folder]/Files/overlay.png)."; }
         }
 
         public string Name
@@ -46,14 +46,8 @@ namespace EvenBetterImageOverlay
 
             go.GetComponent<Renderer>().material = ShaderLoad.shader;
 
-            go.AddComponent<Mod>();
+            go.AddComponent<Movement>();
             go.AddComponent<Config>();
-
-            /*
-            go.transform.position = new Vector3(config.pos.x, config.pos.y, config.pos.z);
-            go.transform.localScale = new Vector3(config.scl.x, config.scl.y, config.scl.z);
-            go.transform.eulerAngles = new Vector3(config.rot.x, config.rot.y, config.rot.z);
-            go.transform.SetParent(Camera.main.transform.parent);*/
         }
 
         public override void OnLevelUnloading()
@@ -64,9 +58,8 @@ namespace EvenBetterImageOverlay
 
     }
 
-    public class Mod : MonoBehaviour
+    public class Movement : MonoBehaviour
     {
-        //track go location
         float srtSlowSpeedFactor = 0.3f;
         public static Vector3 ps, rt, sc;
         bool isMovable = true;
@@ -82,7 +75,7 @@ namespace EvenBetterImageOverlay
 
             float speedModifier = controlDown ? srtSlowSpeedFactor : 1.0f;
 
-            // Image size (using keypad's plus and minus)
+            // Image size
             Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
             if (isMovable && (Input.GetKey(KeyCode.KeypadPlus) || isShiftKeyDown && Input.GetKey(KeyCode.Plus)))
@@ -95,7 +88,7 @@ namespace EvenBetterImageOverlay
                 transform.localScale -= scaleDelta * speedModifier;
             }
 
-            // Image rotation (using keypad 7 and 9)
+            // Image rotation
             Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier;
 
             if (isMovable && (Input.GetKey(KeyCode.Keypad7) || isShiftKeyDown && Input.GetKey(KeyCode.Q)))
@@ -124,7 +117,7 @@ namespace EvenBetterImageOverlay
                 transform.eulerAngles = new Vector3(0f, 180f, 0f);
             }
 
-                // Image position (using keypad arrows)
+                // Image position
             float positionDelta = 400f * speedModifier * Time.deltaTime;
 
             if (isMovable && (Input.GetKey(KeyCode.Keypad8) || isShiftKeyDown && Input.GetKey(KeyCode.UpArrow))) // UP
@@ -145,13 +138,13 @@ namespace EvenBetterImageOverlay
                 transform.position += new Vector3(positionDelta, 0f, 0f);
             }
 
-            // Image toggle (using keypad's enter)
-            if (isMovable && (Input.GetKeyDown(KeyCode.KeypadEnter) || isShiftKeyDown && Input.GetKeyDown(KeyCode.Return)))
+            // Image toggle
+            if (Input.GetKeyDown(KeyCode.KeypadEnter) || isShiftKeyDown && Input.GetKeyDown(KeyCode.Return))
             {
                 gameObject.GetComponent<Renderer>().enabled = !gameObject.GetComponent<Renderer>().enabled;
             }
 
-            // Image height (using keypad's zero and period)
+            // Image height
             if (isMovable && (Input.GetKey(KeyCode.KeypadPeriod) || isShiftKeyDown && Input.GetKey(KeyCode.X)))
             {
                 transform.position += new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);

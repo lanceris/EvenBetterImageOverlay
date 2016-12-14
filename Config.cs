@@ -21,39 +21,34 @@ namespace EvenBetterImageOverlay
 
             if (config == null)
             {
-                Debug.Log("Config.config was null");
                 config = new Configuration();
                 LoadingExtension.go.transform.position = pos = new Vector3(0f, 200f, 0f);
-                LoadingExtension.go.transform.eulerAngles = rot = new Vector3(175f, 1f, 175f);
-                LoadingExtension.go.transform.localScale = scl = new Vector3(0f, 180f, 0f);
+                LoadingExtension.go.transform.eulerAngles = rot = new Vector3(0f, 180f, 0f);
+                LoadingExtension.go.transform.localScale = scl = new Vector3(175f, 1f, 175f);
                 SaveConfig();
             }
             else
             {
-                Debug.Log("Config.config wasn't null");
                 LoadingExtension.go.transform.position = pos = new Vector3(config.posx, config.posy, config.posz);
                 LoadingExtension.go.transform.eulerAngles = rot = new Vector3(config.rotx, config.roty, config.rotz);
                 LoadingExtension.go.transform.localScale = scl = new Vector3(config.sclx, config.scly, config.sclz);
             }
-            Debug.Log("go pos is " + LoadingExtension.go.transform.position.x);
-            Debug.Log("Config.Awake() pos:" + pos);
             SaveConfig();
         }
 
         public void SaveConfig()
         {
-            config.posx = Mod.ps.x;
-            config.posy = Mod.ps.y;
-            config.posz = Mod.ps.z;
+            config.posx = Movement.ps.x;
+            config.posy = Movement.ps.y;
+            config.posz = Movement.ps.z;
 
-            config.rotx = Mod.rt.x;
-            config.roty = Mod.rt.y;
-            config.rotz = Mod.rt.z;
+            config.rotx = Movement.rt.x;
+            config.roty = Movement.rt.y;
+            config.rotz = Movement.rt.z;
 
-            config.sclx = Mod.sc.x;
-            config.scly = Mod.sc.y;
-            config.sclz = Mod.sc.z;
-            Debug.Log("SaveConfig() pos: (" +config.posx+", "+config.posy+", "+config.posz+").");
+            config.sclx = Movement.sc.x;
+            config.scly = Movement.sc.y;
+            config.sclz = Movement.sc.z;
             Configuration.Serialize(configPath, config);
         }
     }
