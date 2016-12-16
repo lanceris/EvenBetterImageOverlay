@@ -5,6 +5,7 @@ using System.Xml.Serialization;
 
 namespace EvenBetterImageOverlay
 {
+    //what to save & where to save to
     public class Config : MonoBehaviour
     {
         public static Config ins;
@@ -53,6 +54,7 @@ namespace EvenBetterImageOverlay
         }
     }
 
+    //actual (de-)serialization
     public class Configuration
     {
         public float posx, posy, posz, sclx, scly, sclz, rotx, roty, rotz;

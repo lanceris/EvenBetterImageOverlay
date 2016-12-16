@@ -4,6 +4,7 @@ using ColossalFramework.Plugins;
 
 namespace EvenBetterImageOverlay
 {
+    //loading shader from assetbundle
     public class ShaderLoad : MonoBehaviour
     {
         public static ShaderLoad instance = null;
