@@ -10,11 +10,6 @@ namespace EvenBetterImageOverlay
     {
         public static Config ins;
         public Configuration config;
-        /*
-        public Vector3 pos;
-        public Vector3 rot;
-        public Vector3 scl;
-        */
         private static readonly string configPath = "EvenBetterImageOverlay.xml";
 
         public void Awake()

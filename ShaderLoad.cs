@@ -26,16 +26,24 @@ namespace EvenBetterImageOverlay
 
         void LoadShaders()
         {
-            
-            string assetsUri = "file:///" + modPath.Replace("\\", "/") + "/shader";
+            string shdn;
+            if (Application.platform == RuntimePlatform.OSXPlayer)
+            {
+                shdn = "/shaderosx";
+            }
+            else
+            {
+                shdn = "/shader";
+            }
+            string assetsUri = "file:///" + modPath.Replace("\\", "/") + shdn;
             WWW www = new WWW(assetsUri);
             AssetBundle assetBundle = www.assetBundle;
-
             string shaderName = "OverlayShader.shader";
             Shader shaderContent = assetBundle.LoadAsset(shaderName) as Shader;
             shader = new Material(shaderContent);
 
             assetBundle.Unload(false);
+            www.Dispose();
         }
 
         public void Awake()

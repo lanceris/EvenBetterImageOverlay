@@ -134,11 +134,11 @@ namespace EvenBetterImageOverlay
             //Scale
             Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
-            if (isMovable && (Input.GetKey(KeyCode.KeypadPlus) || isShiftKeyDown && Input.GetKey(KeyCode.Plus)))
+            if (isMovable && (Input.GetKey(KeyCode.Keypad3) || isShiftKeyDown && Input.GetKey(KeyCode.Equals)))
             {
                 transform.localScale += scaleDelta * speedModifier;
             }
-            else if (isMovable && (Input.GetKey(KeyCode.KeypadMinus) || isShiftKeyDown && Input.GetKey(KeyCode.Minus)))
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad1) || isShiftKeyDown && Input.GetKey(KeyCode.Minus)))
             {
                 transform.localScale -= scaleDelta * speedModifier;
             }
