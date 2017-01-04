@@ -10,46 +10,47 @@ namespace EvenBetterImageOverlay
     {
         public static Config ins;
         public Configuration config;
+        /*
         public Vector3 pos;
         public Vector3 rot;
         public Vector3 scl;
+        */
         private static readonly string configPath = "EvenBetterImageOverlay.xml";
 
-        void Awake()
+        public void Awake()
         {
             ins = this;
             config = Configuration.Deserialize(configPath);
-
             if (config == null)
             {
                 config = new Configuration();
-                LoadingExtension.go.transform.position = pos = new Vector3(0f, 200f, 0f);
-                LoadingExtension.go.transform.eulerAngles = rot = new Vector3(0f, 180f, 0f);
-                LoadingExtension.go.transform.localScale = scl = new Vector3(175f, 1f, 175f);
-                SaveConfig();
+                LoadingExtension.go.transform.position = new Vector3(0f, 200f, 0f);
+                LoadingExtension.go.transform.eulerAngles = new Vector3(0f, 180f, 0f);
+                LoadingExtension.go.transform.localScale = new Vector3(193f, 1f, 193f);
             }
             else
             {
-                LoadingExtension.go.transform.position = pos = new Vector3(config.posx, config.posy, config.posz);
-                LoadingExtension.go.transform.eulerAngles = rot = new Vector3(config.rotx, config.roty, config.rotz);
-                LoadingExtension.go.transform.localScale = scl = new Vector3(config.sclx, config.scly, config.sclz);
+
+                LoadingExtension.go.transform.position = new Vector3(config.posx, config.posy, config.posz);
+                LoadingExtension.go.transform.eulerAngles = new Vector3(config.rotx, config.roty, config.rotz);
+                LoadingExtension.go.transform.localScale = new Vector3(config.sclx, config.scly, config.sclz);
             }
-            SaveConfig();
+            
         }
 
         public void SaveConfig()
         {
-            config.posx = Movement.ps.x;
-            config.posy = Movement.ps.y;
-            config.posz = Movement.ps.z;
+            config.posx = MainLoad.ps.x;
+            config.posy = MainLoad.ps.y;
+            config.posz = MainLoad.ps.z;
 
-            config.rotx = Movement.rt.x;
-            config.roty = Movement.rt.y;
-            config.rotz = Movement.rt.z;
+            config.rotx = MainLoad.rt.x;
+            config.roty = MainLoad.rt.y;
+            config.rotz = MainLoad.rt.z;
 
-            config.sclx = Movement.sc.x;
-            config.scly = Movement.sc.y;
-            config.sclz = Movement.sc.z;
+            config.sclx = MainLoad.sc.x;
+            config.scly = MainLoad.sc.y;
+            config.sclz = MainLoad.sc.z;
             Configuration.Serialize(configPath, config);
         }
     }
