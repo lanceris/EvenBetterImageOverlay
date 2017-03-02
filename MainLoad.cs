@@ -193,12 +193,12 @@ namespace EvenBetterImageOverlay
             }
 
             //Height
-            if (isMovable && (Input.GetKey(KeyCode.KeypadPeriod) || isShiftKeyDown && Input.GetKey(KeyCode.X)))
+            if (Input.GetKey(KeyCode.KeypadPeriod) || isShiftKeyDown && Input.GetKey(KeyCode.X))
             {
                 transform.position += new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
             }
 
-            else if ((isMovable && Input.GetKey(KeyCode.Keypad0) || isShiftKeyDown && Input.GetKey(KeyCode.Z)))
+            else if (Input.GetKey(KeyCode.Keypad0) || isShiftKeyDown && Input.GetKey(KeyCode.Z))
             {
                 transform.position -= new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
             }
@@ -210,7 +210,7 @@ namespace EvenBetterImageOverlay
             }
 
             //Reset rotation and position to default
-            if (isMovable && (isShiftKeyDown && Input.GetKey(KeyCode.C)))
+            if (isMovable && (isShiftKeyDown && Input.GetKey(KeyCode.B)))
             {
                 transform.eulerAngles = new Vector3(0f, 180f, 0f);
                 transform.position = new Vector3(0f, 200f, 0f);
