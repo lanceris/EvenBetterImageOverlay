@@ -1,4 +1,5 @@
 # EvenBetterImageOverlay
+## [Link to the workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=814102166)
 
 EvenBetterImageOverlay is a mod for Cities: Skylines that allows you to show and control an image over your terrain, so you can easily use it as a template for building your city. 
 
