@@ -10,6 +10,7 @@ namespace EvenBetterImageOverlay
     {
         public static Config ins;
         public Configuration config;
+        public static float overlayAlpha;
         private static readonly string configPath = "EvenBetterImageOverlay.xml";
 
         public void Awake()
@@ -22,10 +23,11 @@ namespace EvenBetterImageOverlay
                 LoadingExtension.go.transform.position = new Vector3(0f, 200f, 0f);
                 LoadingExtension.go.transform.eulerAngles = new Vector3(0f, 180f, 0f);
                 LoadingExtension.go.transform.localScale = new Vector3(193f, 1f, 193f);
+                config.overlayAlpha = 255f;
             }
             else
             {
-
+                overlayAlpha = config.overlayAlpha;
                 LoadingExtension.go.transform.position = new Vector3(config.posx, config.posy, config.posz);
                 LoadingExtension.go.transform.eulerAngles = new Vector3(config.rotx, config.roty, config.rotz);
                 LoadingExtension.go.transform.localScale = new Vector3(config.sclx, config.scly, config.sclz);
@@ -46,6 +48,7 @@ namespace EvenBetterImageOverlay
             config.sclx = MainLoad.sc.x;
             config.scly = MainLoad.sc.y;
             config.sclz = MainLoad.sc.z;
+            config.overlayAlpha = overlayAlpha;
             Configuration.Serialize(configPath, config);
         }
     }
@@ -54,14 +57,9 @@ namespace EvenBetterImageOverlay
     public class Configuration
     {
         public float posx, posy, posz, sclx, scly, sclz, rotx, roty, rotz;
-
-        public void OnPreSerialize()
-        {
-        }
-
-        public void OnPostDeserialize()
-        {
-        }
+        public float overlayAlpha = Config.overlayAlpha;
+        public void OnPreSerialize() { }
+        public void OnPostDeserialize() { }
 
         public static void Serialize(string filename, Configuration config)
         {

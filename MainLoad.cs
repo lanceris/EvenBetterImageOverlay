@@ -1,11 +1,28 @@
 ﻿using ICities;
 using UnityEngine;
 using System.IO;
+using ColossalFramework.UI;
 
 namespace EvenBetterImageOverlay
 {
     public class EvenBetterImageOverlay : IUserMod
     {
+        private UISlider slider;
+        public string helperText = "TOGGLE overlay: keypad Enter or Shift + Enter\n"
+                                   +  "CYCLE through images: Shift + R\n"
+                                   +  "LOCK: keypad 5 or Shift + V\n"
+                                   +  "AUTO FIT image to 1x1...9x9 tiles: Shift +T\n"
+                                   +  "RESET to default position and rotation: Shift + B\n\n"
+                                   +  "MOVE: keypad arrows or Shift + arrows\n\n"
+                                   +  "ROTATE: keypad 7 and 9 or Shift + Q and E\n"
+                                   +  "ROTATE by 90°: Shift + Left or Right bracket( { or } )\n\n"
+                                   +  "RAISE: keypad period or Shift + X\n"
+                                   +  "LOWER: keypad 0 or Shift + Z\n\n"
+                                   +  "ENLARGE: keypad 3 or Shift + plus(+)\n"
+                                   +  "REDUCE: keypad 1 or Shift + minus(-)\n\n"
+
+                                   +  "Hold down Ctrl for precise movement";
+
         public string Description
         {
             get { return "Overlays an images located at [Steam Skylines Folder]/Files/*.png"; }
@@ -15,6 +32,28 @@ namespace EvenBetterImageOverlay
         {
             get { return "EvenBetterImageOverlay"; }
         }
+
+        public void OnSettingsUI(UIHelperBase helper)
+        {
+            helper.AddSpace(20);
+            slider = (UISlider)helper.AddSlider("Overlay Alpha", 0f, 255f, 1f, Config.overlayAlpha, (f) =>
+            {
+                Config.overlayAlpha = f;
+                Config.ins.SaveConfig();
+                slider.tooltip = $"{Mathf.Floor((Config.overlayAlpha / 255f)*100)}%\n\nSet opacity level for overlay.";
+                slider.RefreshTooltip();
+            }
+            );
+            slider.width = 510f;
+            slider.height = 10f;
+            slider.color = Color.cyan;
+            slider.scrollWheelAmount = 1f;
+            slider.tooltip = $"{Mathf.Floor((Config.overlayAlpha / 255f) * 100)}%\n\nSet opacity level for overlay.";
+            helper.AddSpace(20);
+            helper.AddButton("Apply", MainLoad.ApplyOpacity);
+            helper.AddSpace(20);
+            helper.AddGroup(helperText);
+        }
     }
 
     public class LoadingExtension : LoadingExtensionBase
@@ -23,9 +62,12 @@ namespace EvenBetterImageOverlay
         public static GameObject go;
         public Config config;
         public static Texture2D tex;
+        public static bool levelLoaded;
+        
+        
         public override void OnLevelLoaded(LoadMode mode)
         {
-            
+            levelLoaded = true;
             go = GameObject.CreatePrimitive(PrimitiveType.Plane);
             tex = new Texture2D(1, 1);
             try
@@ -46,17 +88,20 @@ namespace EvenBetterImageOverlay
 
             go.AddComponent<MainLoad>();
             go.AddComponent<Config>();
-            
+
+            MainLoad.UpdateOpacity();
+
             //go.transform.SetParent(Camera.main.transform.parent);
         }
 
         public override void OnLevelUnloading()
         {
             //save
+            levelLoaded = false;
             go.GetComponent<Config>();
             Config.ins.SaveConfig();
+            MainLoad.Unload(go);
         }
-
     }
 
     public class MainLoad : MonoBehaviour
@@ -74,6 +119,35 @@ namespace EvenBetterImageOverlay
         int count = -1;
         int c = 1;
 
+        public static void ApplyOpacity()
+        {
+            if (LoadingExtension.levelLoaded)
+            {
+                UpdateOpacity();
+            }
+        }
+
+        public static void UpdateOpacity()
+        {
+            Color[] oldColors = LoadingExtension.tex.GetPixels();
+
+            for (int i = 0; i < oldColors.Length; i++)
+            {
+                if (oldColors[i].a != 0f)
+                {
+                    Color newColor = new Color(oldColors[i].r, oldColors[i].g, oldColors[i].b, Config.overlayAlpha / 255f);
+                    oldColors[i] = newColor;
+                }
+            }
+            LoadingExtension.tex.SetPixels(oldColors);
+            LoadingExtension.tex.Apply();
+        }
+
+        public static void Unload(GameObject go)
+        {
+            Destroy(go);
+        }
+
         //listening for inputs
         void Update()
         {
@@ -84,8 +158,11 @@ namespace EvenBetterImageOverlay
 
             bool controlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
             float speedModifier = controlDown ? srtSlowSpeedFactor : 1.0f;
+
+            float positionDelta = 400f * speedModifier * Time.deltaTime;
+            Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier;
+            Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
             //fit to tiles
             if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.T)))
@@ -114,7 +191,7 @@ namespace EvenBetterImageOverlay
                         break;
                 }
             }
-                //cycle through images
+            //cycle through images
             if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.R)))
             {
                 string[] files = TextureLoad();
@@ -129,11 +206,30 @@ namespace EvenBetterImageOverlay
                 {
                     count = -1;
                 }
+
+                //Set opacity
+                UpdateOpacity();
+            }
+
+            //Position
+            if (isMovable && (Input.GetKey(KeyCode.Keypad8) || isShiftKeyDown && Input.GetKey(KeyCode.UpArrow))) // UP
+            {
+                transform.position += new Vector3(0f, 0f, positionDelta);
+            }
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad2) || isShiftKeyDown && Input.GetKey(KeyCode.DownArrow))) // DOWN
+            {
+                transform.position += new Vector3(0f, 0f, -positionDelta);
+            }
+            if (isMovable && (Input.GetKey(KeyCode.Keypad4) || isShiftKeyDown && Input.GetKey(KeyCode.LeftArrow))) // LEFT
+            {
+                transform.position += new Vector3(-positionDelta, 0f, 0f);
+            }
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad6) || isShiftKeyDown && Input.GetKey(KeyCode.RightArrow))) // RIGHT
+            {
+                transform.position += new Vector3(positionDelta, 0f, 0f);
             }
 
             //Scale
-            Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
-
             if (isMovable && (Input.GetKey(KeyCode.Keypad3) || isShiftKeyDown && Input.GetKey(KeyCode.Equals)))
             {
                 transform.localScale += scaleDelta * speedModifier;
@@ -144,8 +240,6 @@ namespace EvenBetterImageOverlay
             }
 
             //Rotation
-            Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier;
-
             if (isMovable && (Input.GetKey(KeyCode.Keypad7) || isShiftKeyDown && Input.GetKey(KeyCode.Q)))
             {
                 transform.eulerAngles -= rotationDelta;
@@ -165,27 +259,6 @@ namespace EvenBetterImageOverlay
                 transform.eulerAngles += rotationDelta * 90;
             }
 
-            //Position
-            float positionDelta = 400f * speedModifier * Time.deltaTime;
-
-            if (isMovable && (Input.GetKey(KeyCode.Keypad8) || isShiftKeyDown && Input.GetKey(KeyCode.UpArrow))) // UP
-            {
-                transform.position += new Vector3(0f, 0f, positionDelta);
-            }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad2) || isShiftKeyDown && Input.GetKey(KeyCode.DownArrow))) // DOWN
-            {
-                transform.position += new Vector3(0f, 0f, -positionDelta);
-            }
-
-            if (isMovable && (Input.GetKey(KeyCode.Keypad4) || isShiftKeyDown && Input.GetKey(KeyCode.LeftArrow))) // LEFT
-            {
-                transform.position += new Vector3(-positionDelta, 0f, 0f);
-            }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad6) || isShiftKeyDown && Input.GetKey(KeyCode.RightArrow))) // RIGHT
-            {
-                transform.position += new Vector3(positionDelta, 0f, 0f);
-            }
-
             //Toggle
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || isShiftKeyDown && Input.GetKeyDown(KeyCode.Return))
             {
@@ -197,7 +270,6 @@ namespace EvenBetterImageOverlay
             {
                 transform.position += new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
             }
-
             else if (Input.GetKey(KeyCode.Keypad0) || isShiftKeyDown && Input.GetKey(KeyCode.Z))
             {
                 transform.position -= new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
@@ -217,6 +289,4 @@ namespace EvenBetterImageOverlay
             }
         }
     }
-
-
 }
