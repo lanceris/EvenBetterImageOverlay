@@ -56,8 +56,7 @@ namespace EvenBetterImageOverlay
     //actual (de-)serialization
     public class Configuration
     {
-        public float posx, posy, posz, sclx, scly, sclz, rotx, roty, rotz;
-        public float overlayAlpha = Config.overlayAlpha;
+        public float posx, posy, posz, sclx, scly, sclz, rotx, roty, rotz, overlayAlpha;
         public void OnPreSerialize() { }
         public void OnPostDeserialize() { }
 

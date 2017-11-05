@@ -8,20 +8,24 @@ namespace EvenBetterImageOverlay
     public class EvenBetterImageOverlay : IUserMod
     {
         private UISlider slider;
-        public string helperText = "TOGGLE overlay: keypad Enter or Shift + Enter\n"
-                                   +  "CYCLE through images: Shift + R\n"
-                                   +  "LOCK: keypad 5 or Shift + V\n"
-                                   +  "AUTO FIT image to 1x1...9x9 tiles: Shift +T\n"
-                                   +  "RESET to default position and rotation: Shift + B\n\n"
-                                   +  "MOVE: keypad arrows or Shift + arrows\n\n"
-                                   +  "ROTATE: keypad 7 and 9 or Shift + Q and E\n"
-                                   +  "ROTATE by 90°: Shift + Left or Right bracket( { or } )\n\n"
-                                   +  "RAISE: keypad period or Shift + X\n"
-                                   +  "LOWER: keypad 0 or Shift + Z\n\n"
-                                   +  "ENLARGE: keypad 3 or Shift + plus(+)\n"
-                                   +  "REDUCE: keypad 1 or Shift + minus(-)\n\n"
+        public string helperText = @"Toggle overlay:                                                  Shift + Enter or keypad Enter
+Cycle through images:                                      Shift + R
+Lock:                                                                     Shift + V or keypad 5
+Auto fit image to 1x1...9x9 tiles:                      Shift +T
+Reset to default position and rotation:        Shift + B
 
-                                   +  "Hold down Ctrl for precise movement";
+Move:                                                                    Shift + arrows or keypad arrows
+
+Rotate:                                                                  Shift + Q and E or keypad 7 and 9
+Rotate by 90°:                                                     Shift + { or }
+
+Raise:                                                                     Shift + X or keypad period
+Lower:                                                                   Shift + Z or keypad 0
+
+Enlarge:                                                                 Shift + plus(+) or keypad 3
+Reduce:                                                                  Shift + minus(-) or keypad 1
+
+Precise movement:                                             Hold Ctrl";
 
         public string Description
         {
@@ -85,10 +89,8 @@ namespace EvenBetterImageOverlay
             ShaderLoad.shader.SetTexture("_MainTex", tex);
 
             go.GetComponent<Renderer>().material = ShaderLoad.shader;
-
             go.AddComponent<MainLoad>();
             go.AddComponent<Config>();
-
             MainLoad.UpdateOpacity();
 
             //go.transform.SetParent(Camera.main.transform.parent);
