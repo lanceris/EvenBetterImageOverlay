@@ -16,23 +16,38 @@ namespace EvenBetterImageOverlay
         public void Awake()
         {
             ins = this;
+
             config = Configuration.Deserialize(configPath);
+
             if (config == null)
             {
-                config = new Configuration();
-                LoadingExtension.go.transform.position = new Vector3(0f, 200f, 0f);
-                LoadingExtension.go.transform.eulerAngles = new Vector3(0f, 180f, 0f);
-                LoadingExtension.go.transform.localScale = new Vector3(193f, 1f, 193f);
-                config.overlayAlpha = 255f;
-            }
-            else
-            {
-                overlayAlpha = config.overlayAlpha;
-                LoadingExtension.go.transform.position = new Vector3(config.posx, config.posy, config.posz);
-                LoadingExtension.go.transform.eulerAngles = new Vector3(config.rotx, config.roty, config.rotz);
-                LoadingExtension.go.transform.localScale = new Vector3(config.sclx, config.scly, config.sclz);
-            }
+                config = new Configuration()
+                {
+                    posx = 0f,
+                    posy = 200f,
+                    posz = 0f,
+
+                    rotx = 0f,
+                    roty = 180f,
+                    rotz = 0f,
+
+                    sclx = 193f,
+                    scly = 1f,
+                    sclz = 193f,
+                    overlayAlpha = 255f
+                };
+            };
             
+            if (config.overlayAlpha <= 0f || config.overlayAlpha > 255f)
+            {
+                config.overlayAlpha = 255f;
+            };
+            Configuration.Serialize(configPath, config);
+            LoadingExtension.go.transform.position = new Vector3(config.posx, config.posy, config.posz);
+            LoadingExtension.go.transform.eulerAngles = new Vector3(config.rotx, config.roty, config.rotz);
+            LoadingExtension.go.transform.localScale = new Vector3(config.sclx, config.scly, config.sclz);
+            overlayAlpha = config.overlayAlpha;
+
         }
 
         public void SaveConfig()
@@ -49,6 +64,7 @@ namespace EvenBetterImageOverlay
             config.scly = MainLoad.sc.y;
             config.sclz = MainLoad.sc.z;
             config.overlayAlpha = overlayAlpha;
+
             Configuration.Serialize(configPath, config);
         }
     }

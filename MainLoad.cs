@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.IO;
 using ColossalFramework.UI;
+using System;
 
 namespace EvenBetterImageOverlay
 {
@@ -46,8 +47,7 @@ Precise movement:                                             Hold Ctrl";
                 Config.ins.SaveConfig();
                 slider.tooltip = $"{Mathf.Floor((Config.overlayAlpha / 255f)*100)}%\n\nSet opacity level for overlay.";
                 slider.RefreshTooltip();
-            }
-            );
+            });
             slider.width = 510f;
             slider.height = 10f;
             slider.color = Color.cyan;
@@ -64,11 +64,9 @@ Precise movement:                                             Hold Ctrl";
     {
         string[] deffile = MainLoad.TextureLoad();
         public static GameObject go;
-        public Config config;
         public static Texture2D tex;
         public static bool levelLoaded;
-        
-        
+
         public override void OnLevelLoaded(LoadMode mode)
         {
             levelLoaded = true;
@@ -154,9 +152,9 @@ Precise movement:                                             Hold Ctrl";
         void Update()
         {
             //track overlay location
-            ps = transform.position;
-            rt = transform.eulerAngles;
-            sc = transform.localScale;
+            ps = LoadingExtension.go.transform.position;
+            rt = LoadingExtension.go.transform.eulerAngles;
+            sc = LoadingExtension.go.transform.localScale;
 
             bool controlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
             bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
