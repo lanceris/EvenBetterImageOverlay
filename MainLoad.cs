@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.IO;
 using ColossalFramework.UI;
-using System;
+using ColossalFramework.Math;
 
 namespace EvenBetterImageOverlay
 {
@@ -287,6 +287,45 @@ Precise movement:                                             Hold Ctrl";
                 transform.eulerAngles = new Vector3(0f, 180f, 0f);
                 transform.position = new Vector3(0f, 200f, 0f);
             }
+        }
+    }
+
+    internal class RenderOver : SimulationManagerBase<RenderOver, MonoBehaviour>, ISimulationManager, IRenderableManager
+    {
+        public static void OnLevelLoaded()
+        {
+            SimulationManager.RegisterManager(instance);
+        }
+
+        protected override void SimulationStepImpl(int subStep)
+        {
+            base.SimulationStepImpl(subStep);
+            //Here goes controls
+        }
+
+        protected override void EndOverlayImpl(RenderManager.CameraInfo cameraInfo)
+        {
+            base.EndOverlayImpl(cameraInfo);
+
+            float x = MainLoad.ps.x, y = MainLoad.ps.z;
+            float sclx = MainLoad.sc.x, scly = MainLoad.sc.z;
+            RenderManager renderManager = RenderManager.instance;
+            Quad3 position = new Quad3(
+                //относительно центра изображения
+                new Vector3(-sclx + x, 0, -scly + y),//leftbottom
+                new Vector3(sclx + x, 0, -scly + y),//rightbottom
+                new Vector3(sclx + x, 0, scly + y),//righttop
+                new Vector3(-sclx + x, 0, scly + y)//lefttop
+                );
+            renderManager.OverlayEffect.DrawQuad(cameraInfo, LoadingExtension.tex, Color.white, position, -1f, 1800f, false, true);
+            /*
+             TODO:
+              - Разные позиции оверлея в конфиге: для старого и нового раздельно
+              - Переключение между оверлеями с блокировкой неактивного
+              - Доработка управления новым оверлеем: масштаб и поворот
+              - UI для изменения управления
+              - Сохранение клавиш управления в конфиг
+             */
         }
     }
 }
