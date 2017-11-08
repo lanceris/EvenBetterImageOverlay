@@ -1,12 +1,12 @@
 ﻿using ICities;
 using UnityEngine;
 using System.IO;
+using System.Collections.Generic;
 using ColossalFramework.UI;
 using ColossalFramework.Math;
 
 /*
              TODO:
-              + Выпилить старый оверлей
               - UI для изменения управления
               - Сохранение клавиш управления в конфиг
 */
@@ -73,11 +73,12 @@ Precise movement:                                             Hold Ctrl";
         public static GameObject go;
         public static Texture2D tex;
         public static bool levelLoaded;
+        public static Dictionary<string, Texture2D> textureDict = new Dictionary<string, Texture2D>();
 
         public override void OnLevelLoaded(LoadMode mode)
         {
             levelLoaded = true;
-            go = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            go = new GameObject();
             tex = new Texture2D(1, 1);
             try
             {
@@ -89,14 +90,11 @@ Precise movement:                                             Hold Ctrl";
                 Debug.Log("[EvenBetterImageOverlay]Error while loading image! Are you sure there is images in Files?");
                 return;
             }
-            //go.AddComponent<ShaderLoad>();
-            //ShaderLoad.shader.SetTexture("_MainTex", tex);
-            //go.GetComponent<Renderer>().material = ShaderLoad.shader;
             go.AddComponent<MainLoad>();
             go.AddComponent<Config>();
-            go.GetComponent<Renderer>().enabled = false;
-            MainLoad.UpdateOpacity();
-            MainLoad.rotateTexture(tex, false);
+            MainLoad.ApplyOpacity();
+            tex = MainLoad.FlipTexture(tex);
+            textureDict.Add(deffile[0], tex);
             RenderOver.OnLevelLoaded();
         }
 
@@ -112,14 +110,26 @@ Precise movement:                                             Hold Ctrl";
 
     public class MainLoad : MonoBehaviour
     {
-        //load files
-        
-        string[] fl = TextureLoad();
         public static Vector3 ps, rt, sc;
         public static bool isMovable = true;
-        int count = -1;
-        int c = 1;
         public static bool active = true;
+        int count = 0;
+        int c = 1;
+        
+        public static Texture2D FlipTexture(Texture2D textureToFlip)
+        {
+            Texture2D texture = new Texture2D(textureToFlip.width, textureToFlip.height);
+
+            for (int y = 0; y < textureToFlip.height; ++y)
+            {
+                for (int x = 0; x < textureToFlip.width; ++x)
+                {
+                    texture.SetPixel(x, y, textureToFlip.GetPixel(y, x));
+                }
+            }
+            texture.Apply();
+            return texture;
+        }
 
         public static string[] TextureLoad()
         {
@@ -131,50 +141,19 @@ Precise movement:                                             Hold Ctrl";
         {
             if (LoadingExtension.levelLoaded)
             {
-                UpdateOpacity();
-            }
-        }
-
-        public static void UpdateOpacity()
-        {
-            Texture2D texture = LoadingExtension.tex;
-            Color32[] oldColors = texture.GetPixels32();
-            for (int i = 0; i < oldColors.Length; i++)
-            {
-
-                if (oldColors[i].a != 0f)
+                Texture2D texture = LoadingExtension.tex;
+                Color32[] oldColors = texture.GetPixels32();
+                for (int i = 0; i < oldColors.Length; i++)
                 {
-                    Color32 newColor = new Color32(oldColors[i].r, oldColors[i].g, oldColors[i].b, (byte)((Config.overlayAlpha / 255f) * 255));
-                    oldColors[i] = newColor;
+                    if (oldColors[i].a != 0f)
+                    {
+                        Color32 newColor = new Color32(oldColors[i].r, oldColors[i].g, oldColors[i].b, (byte)((Config.overlayAlpha / 255f) * 255));
+                        oldColors[i] = newColor;
+                    }
                 }
-                
+                texture.SetPixels32(oldColors);
+                texture.Apply();
             }
-            LoadingExtension.tex.SetPixels32(oldColors);
-            LoadingExtension.tex.Apply();
-        }
-        public static Texture2D rotateTexture(Texture2D originalTexture, bool clockwise)
-        {
-            Color32[] original = originalTexture.GetPixels32();
-            Color32[] rotated = new Color32[original.Length];
-            int w = originalTexture.width;
-            int h = originalTexture.height;
-
-            int iRotated, iOriginal;
-
-            for (int j = 0; j < h; ++j)
-            {
-                for (int i = 0; i < w; ++i)
-                {
-                    iRotated = (i + 1) * h - j - 1;
-                    iOriginal = clockwise ? original.Length - 1 - (j * w + i) : j * w + i;
-                    rotated[iRotated] = original[iOriginal];
-                }
-            }
-
-            Texture2D rotatedTexture = new Texture2D(h, w);
-            rotatedTexture.SetPixels32(rotated);
-            rotatedTexture.Apply();
-            return rotatedTexture;
         }
 
         public static void Unload(GameObject go)
@@ -234,23 +213,27 @@ Precise movement:                                             Hold Ctrl";
             //cycle through images
             if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.R)))
             {
-                string[] files = TextureLoad();
                 count += 1;
-
-                byte[] bytes = File.ReadAllBytes(files[count]);
-                
-                LoadingExtension.tex.LoadImage(bytes);
-                //ShaderLoad.shader.SetTexture("_MainTex", LoadingExtension.tex);
-                //LoadingExtension.go.GetComponent<Renderer>().material = ShaderLoad.shader;
-
-                if (count==files.Length-1)
+                string[] files = TextureLoad();
+                if (LoadingExtension.textureDict.ContainsKey(files[count]))
                 {
-                    count = 0;
+                    LoadingExtension.tex = LoadingExtension.textureDict[files[count]];
                 }
-
-                //Set opacity
-                UpdateOpacity();
-                rotateTexture(LoadingExtension.tex, true);
+                else
+                {
+                    byte[] bytes = File.ReadAllBytes(files[count]);
+                    LoadingExtension.tex.LoadImage(bytes);
+                    ApplyOpacity();
+                    LoadingExtension.tex = FlipTexture(LoadingExtension.tex);
+                    LoadingExtension.textureDict.Add(files[count], LoadingExtension.tex);
+                }
+                for (int i = 0; i < LoadingExtension.textureDict.Count; i++)
+                {
+                    Debug.Log(LoadingExtension.textureDict[files[i]]);
+                }
+                
+                if (count==files.Length) count = 0;
+                
             }
             //Position
             if (isMovable && (Input.GetKey(KeyCode.Keypad8) || shiftDown && Input.GetKey(KeyCode.UpArrow))) // UP
@@ -328,7 +311,7 @@ Precise movement:                                             Hold Ctrl";
             //Lock
             if (Input.GetKeyDown(KeyCode.Keypad5) || shiftDown && Input.GetKeyDown(KeyCode.V))
             {
-                isMovable = !isMovable;
+                if (active) isMovable = !isMovable;
             }
 
             //Reset rotation and position to default
@@ -356,15 +339,11 @@ Precise movement:                                             Hold Ctrl";
         protected override void EndOverlayImpl(RenderManager.CameraInfo cameraInfo)
         {
             base.EndOverlayImpl(cameraInfo);
-            if (!MainLoad.active)
-            {
-                return;
-            }
+            if (!MainLoad.active) return;
             float x = MainLoad.ps.x, y = MainLoad.ps.z;
             float sclx = MainLoad.sc.x, scly = MainLoad.sc.z;
 
             RenderManager renderManager = RenderManager.instance;
-            var effect = renderManager.OverlayEffect.transform; 
             Quad3 position = new Quad3(
                 new Vector3(-sclx + x, 0, -scly + y),//lefttop 1
                 new Vector3(sclx + x, 0, -scly + y),//righttop 2
