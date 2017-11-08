@@ -29,7 +29,11 @@ namespace EvenBetterImageOverlay
             string shdn;
             if (Application.platform == RuntimePlatform.OSXPlayer)
             {
-                shdn = "/shaderosx";
+                shdn = "/osxshader";
+            }
+            else if (Application.platform == RuntimePlatform.LinuxPlayer)
+            {
+                shdn = "/linuxshader";
             }
             else
             {

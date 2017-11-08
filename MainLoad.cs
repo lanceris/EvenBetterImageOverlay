@@ -4,6 +4,13 @@ using System.IO;
 using ColossalFramework.UI;
 using ColossalFramework.Math;
 
+/*
+             TODO:
+              + Выпилить старый оверлей
+              - UI для изменения управления
+              - Сохранение клавиш управления в конфиг
+*/
+
 namespace EvenBetterImageOverlay
 {
     public class EvenBetterImageOverlay : IUserMod
@@ -80,18 +87,17 @@ Precise movement:                                             Hold Ctrl";
             catch
             {
                 Debug.Log("[EvenBetterImageOverlay]Error while loading image! Are you sure there is images in Files?");
-                go.SetActive(false);
                 return;
             }
-            go.AddComponent<ShaderLoad>();
-            ShaderLoad.shader.SetTexture("_MainTex", tex);
-
-            go.GetComponent<Renderer>().material = ShaderLoad.shader;
+            //go.AddComponent<ShaderLoad>();
+            //ShaderLoad.shader.SetTexture("_MainTex", tex);
+            //go.GetComponent<Renderer>().material = ShaderLoad.shader;
             go.AddComponent<MainLoad>();
             go.AddComponent<Config>();
+            go.GetComponent<Renderer>().enabled = false;
             MainLoad.UpdateOpacity();
-
-            //go.transform.SetParent(Camera.main.transform.parent);
+            MainLoad.rotateTexture(tex, false);
+            RenderOver.OnLevelLoaded();
         }
 
         public override void OnLevelUnloading()
@@ -107,17 +113,19 @@ Precise movement:                                             Hold Ctrl";
     public class MainLoad : MonoBehaviour
     {
         //load files
+        
+        string[] fl = TextureLoad();
+        public static Vector3 ps, rt, sc;
+        public static bool isMovable = true;
+        int count = -1;
+        int c = 1;
+        public static bool active = true;
+
         public static string[] TextureLoad()
         {
             string[] fileList = Directory.GetFiles("Files/", "*.png");
             return fileList;
         }
-        string[] fl = TextureLoad();
-        float srtSlowSpeedFactor = 0.1f;
-        public static Vector3 ps, rt, sc;
-        bool isMovable = true;
-        int count = -1;
-        int c = 1;
 
         public static void ApplyOpacity()
         {
@@ -129,18 +137,44 @@ Precise movement:                                             Hold Ctrl";
 
         public static void UpdateOpacity()
         {
-            Color[] oldColors = LoadingExtension.tex.GetPixels();
-
+            Texture2D texture = LoadingExtension.tex;
+            Color32[] oldColors = texture.GetPixels32();
             for (int i = 0; i < oldColors.Length; i++)
             {
+
                 if (oldColors[i].a != 0f)
                 {
-                    Color newColor = new Color(oldColors[i].r, oldColors[i].g, oldColors[i].b, Config.overlayAlpha / 255f);
+                    Color32 newColor = new Color32(oldColors[i].r, oldColors[i].g, oldColors[i].b, (byte)((Config.overlayAlpha / 255f) * 255));
                     oldColors[i] = newColor;
                 }
+                
             }
-            LoadingExtension.tex.SetPixels(oldColors);
+            LoadingExtension.tex.SetPixels32(oldColors);
             LoadingExtension.tex.Apply();
+        }
+        public static Texture2D rotateTexture(Texture2D originalTexture, bool clockwise)
+        {
+            Color32[] original = originalTexture.GetPixels32();
+            Color32[] rotated = new Color32[original.Length];
+            int w = originalTexture.width;
+            int h = originalTexture.height;
+
+            int iRotated, iOriginal;
+
+            for (int j = 0; j < h; ++j)
+            {
+                for (int i = 0; i < w; ++i)
+                {
+                    iRotated = (i + 1) * h - j - 1;
+                    iOriginal = clockwise ? original.Length - 1 - (j * w + i) : j * w + i;
+                    rotated[iRotated] = original[iOriginal];
+                }
+            }
+
+            Texture2D rotatedTexture = new Texture2D(h, w);
+            rotatedTexture.SetPixels32(rotated);
+            rotatedTexture.Apply();
+            return rotatedTexture;
         }
 
         public static void Unload(GameObject go)
@@ -148,7 +182,6 @@ Precise movement:                                             Hold Ctrl";
             Destroy(go);
         }
 
-        //listening for inputs
         void Update()
         {
             //track overlay location
@@ -157,132 +190,149 @@ Precise movement:                                             Hold Ctrl";
             sc = LoadingExtension.go.transform.localScale;
 
             bool controlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-            bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            float speedModifier = controlDown ? srtSlowSpeedFactor : 1.0f;
+            bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            bool altDown = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+            float slowSpeedFactor = 0.1f;
+            float fastSpeedFactor = 3f;
+            float speedModifier;
+
+            if (controlDown && altDown) { speedModifier = fastSpeedFactor; }
+            else if (controlDown) { speedModifier = slowSpeedFactor; }
+            else { speedModifier = 1f; }
 
             float positionDelta = 400f * speedModifier * Time.deltaTime;
             Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier;
             Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
             //fit to tiles
-            if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.T)))
+            if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.T)))
             {
                 switch (c)
                 {
                     case 1:
                         //1x1
-                        LoadingExtension.go.transform.localScale = new Vector3(193f, 1f, 193f);
+                        LoadingExtension.go.transform.localScale = new Vector3(960f, 1f, 960f);
                         c += 1;
                         break;
                     case 2:
                         //3x3
-                        LoadingExtension.go.transform.localScale = new Vector3(577f, 1f, 577f);
+                        LoadingExtension.go.transform.localScale = new Vector3(2880f, 1f, 2880f);
                         c += 1;
                         break;
                     case 3:
                         //5x5
-                        LoadingExtension.go.transform.localScale = new Vector3(965f, 1f, 965f);
+                        LoadingExtension.go.transform.localScale = new Vector3(4800f, 1f, 4800f);
                         c += 1;
                         break;
                     case 4:
                         //9x9
-                        LoadingExtension.go.transform.localScale = new Vector3(1727f, 1f, 1727f);
+                        LoadingExtension.go.transform.localScale = new Vector3(8640f, 1f, 8640f);
                         c = 1;
                         break;
                 }
             }
             //cycle through images
-            if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.R)))
+            if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.R)))
             {
                 string[] files = TextureLoad();
                 count += 1;
 
                 byte[] bytes = File.ReadAllBytes(files[count]);
+                
                 LoadingExtension.tex.LoadImage(bytes);
-                ShaderLoad.shader.SetTexture("_MainTex", LoadingExtension.tex);
-                LoadingExtension.go.GetComponent<Renderer>().material = ShaderLoad.shader;
+                //ShaderLoad.shader.SetTexture("_MainTex", LoadingExtension.tex);
+                //LoadingExtension.go.GetComponent<Renderer>().material = ShaderLoad.shader;
 
                 if (count==files.Length-1)
                 {
-                    count = -1;
+                    count = 0;
                 }
 
                 //Set opacity
                 UpdateOpacity();
+                rotateTexture(LoadingExtension.tex, true);
             }
-
             //Position
-            if (isMovable && (Input.GetKey(KeyCode.Keypad8) || isShiftKeyDown && Input.GetKey(KeyCode.UpArrow))) // UP
+            if (isMovable && (Input.GetKey(KeyCode.Keypad8) || shiftDown && Input.GetKey(KeyCode.UpArrow))) // UP
             {
                 transform.position += new Vector3(0f, 0f, positionDelta);
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad2) || isShiftKeyDown && Input.GetKey(KeyCode.DownArrow))) // DOWN
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad2) || shiftDown && Input.GetKey(KeyCode.DownArrow))) // DOWN
             {
                 transform.position += new Vector3(0f, 0f, -positionDelta);
             }
-            if (isMovable && (Input.GetKey(KeyCode.Keypad4) || isShiftKeyDown && Input.GetKey(KeyCode.LeftArrow))) // LEFT
+            if (isMovable && (Input.GetKey(KeyCode.Keypad4) || shiftDown && Input.GetKey(KeyCode.LeftArrow))) // LEFT
             {
                 transform.position += new Vector3(-positionDelta, 0f, 0f);
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad6) || isShiftKeyDown && Input.GetKey(KeyCode.RightArrow))) // RIGHT
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad6) || shiftDown && Input.GetKey(KeyCode.RightArrow))) // RIGHT
             {
                 transform.position += new Vector3(positionDelta, 0f, 0f);
             }
 
             //Scale
-            if (isMovable && (Input.GetKey(KeyCode.Keypad3) || isShiftKeyDown && Input.GetKey(KeyCode.Equals)))
+            if (isMovable && (Input.GetKey(KeyCode.Keypad3) || shiftDown && Input.GetKey(KeyCode.Equals)))
             {
                 transform.localScale += scaleDelta * speedModifier;
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad1) || isShiftKeyDown && Input.GetKey(KeyCode.Minus)))
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad1) || shiftDown && Input.GetKey(KeyCode.Minus)))
             {
                 transform.localScale -= scaleDelta * speedModifier;
             }
 
             //Rotation
-            if (isMovable && (Input.GetKey(KeyCode.Keypad7) || isShiftKeyDown && Input.GetKey(KeyCode.Q)))
+            if (isMovable && (Input.GetKey(KeyCode.Keypad7) || shiftDown && Input.GetKey(KeyCode.Q)))
             {
                 transform.eulerAngles -= rotationDelta;
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad9) || isShiftKeyDown && Input.GetKey(KeyCode.E)))
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad9) || shiftDown && Input.GetKey(KeyCode.E)))
             {
                 transform.eulerAngles += rotationDelta;
             }
 
             //90° rotation
-            else if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.LeftBracket)))
+            else if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.LeftBracket)))
             {
                 transform.eulerAngles -= rotationDelta * 90;
             }
-            else if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.RightBracket)))
+            else if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.RightBracket)))
             {
                 transform.eulerAngles += rotationDelta * 90;
             }
 
-            //Toggle
-            if (Input.GetKeyDown(KeyCode.KeypadEnter) || isShiftKeyDown && Input.GetKeyDown(KeyCode.Return))
+            //Toggle active
+            if (Input.GetKeyDown(KeyCode.KeypadEnter) || shiftDown && Input.GetKeyDown(KeyCode.Return))
             {
-                gameObject.GetComponent<Renderer>().enabled = !gameObject.GetComponent<Renderer>().enabled;
+                if (!active)
+                {
+                    isMovable = true;
+                    active = true;
+                }
+                else
+                {
+                    isMovable = false;
+                    active = false;
+                }
             }
 
             //Height
-            if (Input.GetKey(KeyCode.KeypadPeriod) || isShiftKeyDown && Input.GetKey(KeyCode.X))
+            if (Input.GetKey(KeyCode.KeypadPeriod) || shiftDown && Input.GetKey(KeyCode.X))
             {
                 transform.position += new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
             }
-            else if (Input.GetKey(KeyCode.Keypad0) || isShiftKeyDown && Input.GetKey(KeyCode.Z))
+            else if (Input.GetKey(KeyCode.Keypad0) || shiftDown && Input.GetKey(KeyCode.Z))
             {
                 transform.position -= new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
             }
 
             //Lock
-            if (Input.GetKeyDown(KeyCode.Keypad5) || isShiftKeyDown && Input.GetKeyDown(KeyCode.V))
+            if (Input.GetKeyDown(KeyCode.Keypad5) || shiftDown && Input.GetKeyDown(KeyCode.V))
             {
                 isMovable = !isMovable;
             }
 
             //Reset rotation and position to default
-            if (isMovable && (isShiftKeyDown && Input.GetKey(KeyCode.B)))
+            if (isMovable && (shiftDown && Input.GetKey(KeyCode.B)))
             {
                 transform.eulerAngles = new Vector3(0f, 180f, 0f);
                 transform.position = new Vector3(0f, 200f, 0f);
@@ -300,32 +350,30 @@ Precise movement:                                             Hold Ctrl";
         protected override void SimulationStepImpl(int subStep)
         {
             base.SimulationStepImpl(subStep);
-            //Here goes controls
+            //controls
         }
 
         protected override void EndOverlayImpl(RenderManager.CameraInfo cameraInfo)
         {
             base.EndOverlayImpl(cameraInfo);
-
+            if (!MainLoad.active)
+            {
+                return;
+            }
             float x = MainLoad.ps.x, y = MainLoad.ps.z;
             float sclx = MainLoad.sc.x, scly = MainLoad.sc.z;
+
             RenderManager renderManager = RenderManager.instance;
+            var effect = renderManager.OverlayEffect.transform; 
             Quad3 position = new Quad3(
-                //относительно центра изображения
-                new Vector3(-sclx + x, 0, -scly + y),//leftbottom
-                new Vector3(sclx + x, 0, -scly + y),//rightbottom
-                new Vector3(sclx + x, 0, scly + y),//righttop
-                new Vector3(-sclx + x, 0, scly + y)//lefttop
+                new Vector3(-sclx + x, 0, -scly + y),//lefttop 1
+                new Vector3(sclx + x, 0, -scly + y),//righttop 2
+                new Vector3(sclx + x, 0, scly + y),//rightbottom 3 
+                new Vector3(-sclx + x, 0, scly + y)//leftbottom 4
+                
                 );
             renderManager.OverlayEffect.DrawQuad(cameraInfo, LoadingExtension.tex, Color.white, position, -1f, 1800f, false, true);
-            /*
-             TODO:
-              - Разные позиции оверлея в конфиге: для старого и нового раздельно
-              - Переключение между оверлеями с блокировкой неактивного
-              - Доработка управления новым оверлеем: масштаб и поворот
-              - UI для изменения управления
-              - Сохранение клавиш управления в конфиг
-             */
+            
         }
     }
 }
