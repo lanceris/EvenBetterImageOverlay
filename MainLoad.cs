@@ -5,12 +5,6 @@ using System.Collections.Generic;
 using ColossalFramework.UI;
 using ColossalFramework.Math;
 
-/*
-             TODO:
-              - UI для изменения управления
-              - Сохранение клавиш управления в конфиг
-*/
-
 namespace EvenBetterImageOverlay
 {
     public class EvenBetterImageOverlay : IUserMod
@@ -24,12 +18,6 @@ Reset to default position and rotation:        Shift + B
 
 Move:                                                                    Shift + arrows or keypad arrows
 
-Rotate:                                                                  Shift + Q and E or keypad 7 and 9
-Rotate by 90°:                                                     Shift + { or }
-
-Raise:                                                                     Shift + X or keypad period
-Lower:                                                                   Shift + Z or keypad 0
-
 Enlarge:                                                                 Shift + plus(+) or keypad 3
 Reduce:                                                                  Shift + minus(-) or keypad 1
 
@@ -42,13 +30,13 @@ Precise movement:                                             Hold Ctrl";
 
         public string Name
         {
-            get { return "EvenBetterImageOverlay"; }
+            get { return "Image Overlay"; }
         }
 
         public void OnSettingsUI(UIHelperBase helper)
         {
             helper.AddSpace(20);
-            slider = (UISlider)helper.AddSlider("Overlay Alpha", 0f, 255f, 1f, Config.overlayAlpha, (f) =>
+            slider = (UISlider)helper.AddSlider("Overlay Alpha", 1f, 255f, 1f, Config.overlayAlpha, (f) =>
             {
                 Config.overlayAlpha = f;
                 Config.ins.SaveConfig();
@@ -98,7 +86,6 @@ Precise movement:                                             Hold Ctrl";
 
         public override void OnLevelUnloading()
         {
-            //save
             levelLoaded = false;
             go.GetComponent<Config>();
             Config.ins.SaveConfig();
@@ -180,6 +167,7 @@ Precise movement:                                             Hold Ctrl";
         public static void Unload(GameObject go)
         {
             Destroy(go);
+            textureDict.Clear();
         }
 
         void Update()
@@ -279,26 +267,6 @@ Precise movement:                                             Hold Ctrl";
                 transform.localScale -= scaleDelta * speedModifier;
             }
 
-            //Rotation
-            if (isMovable && (Input.GetKey(KeyCode.Keypad7) || shiftDown && Input.GetKey(KeyCode.Q)))
-            {
-                transform.eulerAngles -= rotationDelta;
-            }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad9) || shiftDown && Input.GetKey(KeyCode.E)))
-            {
-                transform.eulerAngles += rotationDelta;
-            }
-
-            //90° rotation
-            else if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.LeftBracket)))
-            {
-                transform.eulerAngles -= rotationDelta * 90;
-            }
-            else if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.RightBracket)))
-            {
-                transform.eulerAngles += rotationDelta * 90;
-            }
-
             //Toggle active
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || shiftDown && Input.GetKeyDown(KeyCode.Return))
             {
@@ -314,23 +282,13 @@ Precise movement:                                             Hold Ctrl";
                 }
             }
 
-            //Height
-            if (Input.GetKey(KeyCode.KeypadPeriod) || shiftDown && Input.GetKey(KeyCode.X))
-            {
-                transform.position += new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
-            }
-            else if (Input.GetKey(KeyCode.Keypad0) || shiftDown && Input.GetKey(KeyCode.Z))
-            {
-                transform.position -= new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
-            }
-
             //Lock
             if (Input.GetKeyDown(KeyCode.Keypad5) || shiftDown && Input.GetKeyDown(KeyCode.V))
             {
                 if (active) isMovable = !isMovable;
             }
 
-            //Reset rotation and position to default
+            //Reset position to default
             if (isMovable && (shiftDown && Input.GetKey(KeyCode.B)))
             {
                 transform.eulerAngles = new Vector3(0f, 180f, 0f);
@@ -346,12 +304,6 @@ Precise movement:                                             Hold Ctrl";
             SimulationManager.RegisterManager(instance);
         }
 
-        protected override void SimulationStepImpl(int subStep)
-        {
-            base.SimulationStepImpl(subStep);
-            //controls
-        }
-
         protected override void EndOverlayImpl(RenderManager.CameraInfo cameraInfo)
         {
             base.EndOverlayImpl(cameraInfo);
@@ -359,15 +311,13 @@ Precise movement:                                             Hold Ctrl";
             float x = MainLoad.ps.x, y = MainLoad.ps.z;
             float sclx = MainLoad.sc.x, scly = MainLoad.sc.z;
 
-            RenderManager renderManager = RenderManager.instance;
             Quad3 position = new Quad3(
                 new Vector3(-sclx + x, 0, -scly + y),//lefttop 1
                 new Vector3(sclx + x, 0, -scly + y),//righttop 2
                 new Vector3(sclx + x, 0, scly + y),//rightbottom 3 
                 new Vector3(-sclx + x, 0, scly + y)//leftbottom 4
-                
                 );
-            renderManager.OverlayEffect.DrawQuad(cameraInfo, LoadingExtension.tex, Color.white, position, -1f, 1800f, false, true);
+            RenderManager.instance.OverlayEffect.DrawQuad(cameraInfo, LoadingExtension.tex, Color.white, position, -1f, 1800f, false, true);
             
         }
     }
