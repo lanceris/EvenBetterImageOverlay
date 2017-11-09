@@ -1,8 +1,9 @@
 ﻿using ICities;
 using UnityEngine;
 using System.IO;
+using System.Collections.Generic;
 using ColossalFramework.UI;
-using System;
+using ColossalFramework.Math;
 
 namespace EvenBetterImageOverlay
 {
@@ -17,16 +18,11 @@ Reset to default position and rotation:        Shift + B
 
 Move:                                                                    Shift + arrows or keypad arrows
 
-Rotate:                                                                  Shift + Q and E or keypad 7 and 9
-Rotate by 90°:                                                     Shift + { or }
-
-Raise:                                                                     Shift + X or keypad period
-Lower:                                                                   Shift + Z or keypad 0
-
 Enlarge:                                                                 Shift + plus(+) or keypad 3
 Reduce:                                                                  Shift + minus(-) or keypad 1
 
-Precise movement:                                             Hold Ctrl";
+Precise movement:                                             Hold Ctrl
+Fast movement:                                             Hold Ctrl + Alt";
 
         public string Description
         {
@@ -35,13 +31,13 @@ Precise movement:                                             Hold Ctrl";
 
         public string Name
         {
-            get { return "EvenBetterImageOverlay"; }
+            get { return "Image Overlay"; }
         }
 
         public void OnSettingsUI(UIHelperBase helper)
         {
             helper.AddSpace(20);
-            slider = (UISlider)helper.AddSlider("Overlay Alpha", 0f, 255f, 1f, Config.overlayAlpha, (f) =>
+            slider = (UISlider)helper.AddSlider("Overlay Alpha", 1f, 255f, 1f, Config.overlayAlpha, (f) =>
             {
                 Config.overlayAlpha = f;
                 Config.ins.SaveConfig();
@@ -54,7 +50,7 @@ Precise movement:                                             Hold Ctrl";
             slider.scrollWheelAmount = 1f;
             slider.tooltip = $"{Mathf.Floor((Config.overlayAlpha / 255f) * 100)}%\n\nSet opacity level for overlay.";
             helper.AddSpace(20);
-            helper.AddButton("Apply", MainLoad.ApplyOpacity);
+            helper.AddButton("Apply", MainLoad.Kek);
             helper.AddSpace(20);
             helper.AddGroup(helperText);
         }
@@ -66,11 +62,11 @@ Precise movement:                                             Hold Ctrl";
         public static GameObject go;
         public static Texture2D tex;
         public static bool levelLoaded;
-
+        
         public override void OnLevelLoaded(LoadMode mode)
         {
             levelLoaded = true;
-            go = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            go = new GameObject();
             tex = new Texture2D(1, 1);
             try
             {
@@ -80,23 +76,17 @@ Precise movement:                                             Hold Ctrl";
             catch
             {
                 Debug.Log("[EvenBetterImageOverlay]Error while loading image! Are you sure there is images in Files?");
-                go.SetActive(false);
                 return;
             }
-            go.AddComponent<ShaderLoad>();
-            ShaderLoad.shader.SetTexture("_MainTex", tex);
-
-            go.GetComponent<Renderer>().material = ShaderLoad.shader;
             go.AddComponent<MainLoad>();
             go.AddComponent<Config>();
-            MainLoad.UpdateOpacity();
-
-            //go.transform.SetParent(Camera.main.transform.parent);
+            tex = MainLoad.ApplyOpacity(tex, "both");
+            MainLoad.textureDict.Add(deffile[0], tex);
+            RenderOver.OnLevelLoaded();
         }
 
         public override void OnLevelUnloading()
         {
-            //save
             levelLoaded = false;
             go.GetComponent<Config>();
             Config.ins.SaveConfig();
@@ -106,49 +96,81 @@ Precise movement:                                             Hold Ctrl";
 
     public class MainLoad : MonoBehaviour
     {
-        //load files
+        public static Dictionary<string, Texture2D> textureDict = new Dictionary<string, Texture2D>();
+        public static Vector3 ps, rt, sc;
+        public static bool isMovable = true;
+        public static bool active = true;
+        int count = 0;
+        int c = 1;
+        
+        public static Texture2D FlipTexture(Texture2D textureToFlip)
+        {
+            Texture2D texture = new Texture2D(textureToFlip.width, textureToFlip.height);
+
+            for (int y = 0; y < textureToFlip.height; ++y)
+            {
+                for (int x = 0; x < textureToFlip.width; ++x)
+                {
+                    texture.SetPixel(x, y, textureToFlip.GetPixel(y, x));
+                }
+            }
+            return texture;
+        }
+
         public static string[] TextureLoad()
         {
             string[] fileList = Directory.GetFiles("Files/", "*.png");
             return fileList;
         }
-        string[] fl = TextureLoad();
-        float srtSlowSpeedFactor = 0.1f;
-        public static Vector3 ps, rt, sc;
-        bool isMovable = true;
-        int count = -1;
-        int c = 1;
 
-        public static void ApplyOpacity()
+        public static void Kek()
+        {
+            ApplyOpacity(LoadingExtension.tex, "no");
+        }
+
+        public static Texture2D ApplyOpacity(Texture2D texture , string flip)
         {
             if (LoadingExtension.levelLoaded)
             {
-                UpdateOpacity();
-            }
-        }
-
-        public static void UpdateOpacity()
-        {
-            Color[] oldColors = LoadingExtension.tex.GetPixels();
-
-            for (int i = 0; i < oldColors.Length; i++)
-            {
-                if (oldColors[i].a != 0f)
+                if (flip=="no")
                 {
-                    Color newColor = new Color(oldColors[i].r, oldColors[i].g, oldColors[i].b, Config.overlayAlpha / 255f);
-                    oldColors[i] = newColor;
+                    Color32[] oldColors = texture.GetPixels32();
+                    for (int i = 0; i < oldColors.Length; i++)
+                    {
+                        if (oldColors[i].a != 0f)
+                        {
+                            Color32 newColor = new Color32(oldColors[i].r, oldColors[i].g, oldColors[i].b, (byte)((Config.overlayAlpha / 255f) * 255));
+                            oldColors[i] = newColor;
+                        }
+                    }
+                    texture.SetPixels32(oldColors);
                 }
+                else if (flip=="both")
+                {
+                    texture = FlipTexture(texture);
+                    Color32[] oldColors = texture.GetPixels32();
+                    for (int i = 0; i < oldColors.Length; i++)
+                    {
+                        if (oldColors[i].a != 0f)
+                        {
+                            Color32 newColor = new Color32(oldColors[i].r, oldColors[i].g, oldColors[i].b, (byte)((Config.overlayAlpha / 255f) * 255));
+                            oldColors[i] = newColor;
+                        }
+                    }
+                    texture.SetPixels32(oldColors);
+                }
+                texture.Apply();
+                return texture;
             }
-            LoadingExtension.tex.SetPixels(oldColors);
-            LoadingExtension.tex.Apply();
+            return null;
         }
 
         public static void Unload(GameObject go)
         {
             Destroy(go);
+            textureDict.Clear();
         }
 
-        //listening for inputs
         void Update()
         {
             //track overlay location
@@ -157,136 +179,147 @@ Precise movement:                                             Hold Ctrl";
             sc = LoadingExtension.go.transform.localScale;
 
             bool controlDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-            bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            float speedModifier = controlDown ? srtSlowSpeedFactor : 1.0f;
+            bool shiftDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            bool altDown = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+            float slowSpeedFactor = 0.1f;
+            float fastSpeedFactor = 3f;
+            float speedModifier;
+
+            if (controlDown && altDown) { speedModifier = fastSpeedFactor; }
+            else if (controlDown) { speedModifier = slowSpeedFactor; }
+            else { speedModifier = 1f; }
 
             float positionDelta = 400f * speedModifier * Time.deltaTime;
             Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier;
             Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
             //fit to tiles
-            if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.T)))
+            if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.T)))
             {
+                c += 1;
+                if (c == 5) c = 1;
                 switch (c)
                 {
                     case 1:
                         //1x1
-                        LoadingExtension.go.transform.localScale = new Vector3(193f, 1f, 193f);
-                        c += 1;
+                        LoadingExtension.go.transform.localScale = new Vector3(960f, 1f, 960f);
                         break;
                     case 2:
                         //3x3
-                        LoadingExtension.go.transform.localScale = new Vector3(577f, 1f, 577f);
-                        c += 1;
+                        LoadingExtension.go.transform.localScale = new Vector3(2880f, 1f, 2880f);
                         break;
                     case 3:
                         //5x5
-                        LoadingExtension.go.transform.localScale = new Vector3(965f, 1f, 965f);
-                        c += 1;
+                        LoadingExtension.go.transform.localScale = new Vector3(4800f, 1f, 4800f);
                         break;
                     case 4:
                         //9x9
-                        LoadingExtension.go.transform.localScale = new Vector3(1727f, 1f, 1727f);
-                        c = 1;
+                        LoadingExtension.go.transform.localScale = new Vector3(8640f, 1f, 8640f);
                         break;
                 }
             }
             //cycle through images
-            if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.R)))
+            if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.R)))
             {
                 string[] files = TextureLoad();
-                count += 1;
-
-                byte[] bytes = File.ReadAllBytes(files[count]);
-                LoadingExtension.tex.LoadImage(bytes);
-                ShaderLoad.shader.SetTexture("_MainTex", LoadingExtension.tex);
-                LoadingExtension.go.GetComponent<Renderer>().material = ShaderLoad.shader;
-
-                if (count==files.Length-1)
+                //Texture2D texture = LoadingExtension.tex;
+                Texture2D texture = new Texture2D(1, 1);
+                if (textureDict.ContainsKey(files[count]))
                 {
-                    count = -1;
+                    texture = textureDict[files[count]];
                 }
-
-                //Set opacity
-                UpdateOpacity();
+                else
+                {
+                    byte[] bytes = File.ReadAllBytes(files[count]);
+                    texture.LoadImage(bytes);
+                    texture = ApplyOpacity(texture, "both");
+                    textureDict.Add(files[count], texture);
+                }
+                texture.Apply();
+                LoadingExtension.tex = texture;
+                count += 1;
+                if (count==files.Length) count = 0;
             }
-
             //Position
-            if (isMovable && (Input.GetKey(KeyCode.Keypad8) || isShiftKeyDown && Input.GetKey(KeyCode.UpArrow))) // UP
+            if (isMovable && (Input.GetKey(KeyCode.Keypad8) || shiftDown && Input.GetKey(KeyCode.UpArrow))) // UP
             {
                 transform.position += new Vector3(0f, 0f, positionDelta);
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad2) || isShiftKeyDown && Input.GetKey(KeyCode.DownArrow))) // DOWN
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad2) || shiftDown && Input.GetKey(KeyCode.DownArrow))) // DOWN
             {
                 transform.position += new Vector3(0f, 0f, -positionDelta);
             }
-            if (isMovable && (Input.GetKey(KeyCode.Keypad4) || isShiftKeyDown && Input.GetKey(KeyCode.LeftArrow))) // LEFT
+            if (isMovable && (Input.GetKey(KeyCode.Keypad4) || shiftDown && Input.GetKey(KeyCode.LeftArrow))) // LEFT
             {
                 transform.position += new Vector3(-positionDelta, 0f, 0f);
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad6) || isShiftKeyDown && Input.GetKey(KeyCode.RightArrow))) // RIGHT
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad6) || shiftDown && Input.GetKey(KeyCode.RightArrow))) // RIGHT
             {
                 transform.position += new Vector3(positionDelta, 0f, 0f);
             }
 
             //Scale
-            if (isMovable && (Input.GetKey(KeyCode.Keypad3) || isShiftKeyDown && Input.GetKey(KeyCode.Equals)))
+            if (isMovable && (Input.GetKey(KeyCode.Keypad3) || shiftDown && Input.GetKey(KeyCode.Equals)))
             {
                 transform.localScale += scaleDelta * speedModifier;
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad1) || isShiftKeyDown && Input.GetKey(KeyCode.Minus)))
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad1) || shiftDown && Input.GetKey(KeyCode.Minus)))
             {
                 transform.localScale -= scaleDelta * speedModifier;
             }
 
-            //Rotation
-            if (isMovable && (Input.GetKey(KeyCode.Keypad7) || isShiftKeyDown && Input.GetKey(KeyCode.Q)))
+            //Toggle active
+            if (Input.GetKeyDown(KeyCode.KeypadEnter) || shiftDown && Input.GetKeyDown(KeyCode.Return))
             {
-                transform.eulerAngles -= rotationDelta;
-            }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad9) || isShiftKeyDown && Input.GetKey(KeyCode.E)))
-            {
-                transform.eulerAngles += rotationDelta;
-            }
-
-            //90° rotation
-            else if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.LeftBracket)))
-            {
-                transform.eulerAngles -= rotationDelta * 90;
-            }
-            else if (isMovable && (isShiftKeyDown && Input.GetKeyDown(KeyCode.RightBracket)))
-            {
-                transform.eulerAngles += rotationDelta * 90;
-            }
-
-            //Toggle
-            if (Input.GetKeyDown(KeyCode.KeypadEnter) || isShiftKeyDown && Input.GetKeyDown(KeyCode.Return))
-            {
-                gameObject.GetComponent<Renderer>().enabled = !gameObject.GetComponent<Renderer>().enabled;
-            }
-
-            //Height
-            if (Input.GetKey(KeyCode.KeypadPeriod) || isShiftKeyDown && Input.GetKey(KeyCode.X))
-            {
-                transform.position += new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
-            }
-            else if (Input.GetKey(KeyCode.Keypad0) || isShiftKeyDown && Input.GetKey(KeyCode.Z))
-            {
-                transform.position -= new Vector3(0f, 400f * speedModifier * Time.deltaTime, 0f);
+                if (!active)
+                {
+                    isMovable = true;
+                    active = true;
+                }
+                else
+                {
+                    isMovable = false;
+                    active = false;
+                }
             }
 
             //Lock
-            if (Input.GetKeyDown(KeyCode.Keypad5) || isShiftKeyDown && Input.GetKeyDown(KeyCode.V))
+            if (Input.GetKeyDown(KeyCode.Keypad5) || shiftDown && Input.GetKeyDown(KeyCode.V))
             {
-                isMovable = !isMovable;
+                if (active) isMovable = !isMovable;
             }
 
-            //Reset rotation and position to default
-            if (isMovable && (isShiftKeyDown && Input.GetKey(KeyCode.B)))
+            //Reset position to default
+            if (isMovable && (shiftDown && Input.GetKey(KeyCode.B)))
             {
                 transform.eulerAngles = new Vector3(0f, 180f, 0f);
                 transform.position = new Vector3(0f, 200f, 0f);
             }
+        }
+    }
+
+    internal class RenderOver : SimulationManagerBase<RenderOver, MonoBehaviour>, ISimulationManager, IRenderableManager
+    {
+        public static void OnLevelLoaded()
+        {
+            SimulationManager.RegisterManager(instance);
+        }
+
+        protected override void EndOverlayImpl(RenderManager.CameraInfo cameraInfo)
+        {
+            base.EndOverlayImpl(cameraInfo);
+            if (!MainLoad.active) return;
+            float x = MainLoad.ps.x, y = MainLoad.ps.z;
+            float sclx = MainLoad.sc.x, scly = MainLoad.sc.z;
+
+            Quad3 position = new Quad3(
+                new Vector3(-sclx + x, 0, -scly + y),//lefttop 1
+                new Vector3(sclx + x, 0, -scly + y),//righttop 2
+                new Vector3(sclx + x, 0, scly + y),//rightbottom 3 
+                new Vector3(-sclx + x, 0, scly + y)//leftbottom 4
+                );
+            RenderManager.instance.OverlayEffect.DrawQuad(cameraInfo, LoadingExtension.tex, Color.white, position, -1f, 1800f, false, true);
+            
         }
     }
 }
