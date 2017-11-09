@@ -61,7 +61,7 @@ Precise movement:                                             Hold Ctrl";
             slider.scrollWheelAmount = 1f;
             slider.tooltip = $"{Mathf.Floor((Config.overlayAlpha / 255f) * 100)}%\n\nSet opacity level for overlay.";
             helper.AddSpace(20);
-            helper.AddButton("Apply", MainLoad.ApplyOpacity);
+            helper.AddButton("Apply", MainLoad.Kek);
             helper.AddSpace(20);
             helper.AddGroup(helperText);
         }
@@ -73,8 +73,7 @@ Precise movement:                                             Hold Ctrl";
         public static GameObject go;
         public static Texture2D tex;
         public static bool levelLoaded;
-        public static Dictionary<string, Texture2D> textureDict = new Dictionary<string, Texture2D>();
-
+        
         public override void OnLevelLoaded(LoadMode mode)
         {
             levelLoaded = true;
@@ -92,9 +91,8 @@ Precise movement:                                             Hold Ctrl";
             }
             go.AddComponent<MainLoad>();
             go.AddComponent<Config>();
-            MainLoad.ApplyOpacity();
-            tex = MainLoad.FlipTexture(tex);
-            textureDict.Add(deffile[0], tex);
+            tex = MainLoad.ApplyOpacity(tex, "both");
+            MainLoad.textureDict.Add(deffile[0], tex);
             RenderOver.OnLevelLoaded();
         }
 
@@ -110,6 +108,7 @@ Precise movement:                                             Hold Ctrl";
 
     public class MainLoad : MonoBehaviour
     {
+        public static Dictionary<string, Texture2D> textureDict = new Dictionary<string, Texture2D>();
         public static Vector3 ps, rt, sc;
         public static bool isMovable = true;
         public static bool active = true;
@@ -127,7 +126,6 @@ Precise movement:                                             Hold Ctrl";
                     texture.SetPixel(x, y, textureToFlip.GetPixel(y, x));
                 }
             }
-            texture.Apply();
             return texture;
         }
 
@@ -137,23 +135,46 @@ Precise movement:                                             Hold Ctrl";
             return fileList;
         }
 
-        public static void ApplyOpacity()
+        public static void Kek()
+        {
+            ApplyOpacity(LoadingExtension.tex, "no");
+        }
+
+        public static Texture2D ApplyOpacity(Texture2D texture , string flip)
         {
             if (LoadingExtension.levelLoaded)
             {
-                Texture2D texture = LoadingExtension.tex;
-                Color32[] oldColors = texture.GetPixels32();
-                for (int i = 0; i < oldColors.Length; i++)
+                if (flip=="no")
                 {
-                    if (oldColors[i].a != 0f)
+                    Color32[] oldColors = texture.GetPixels32();
+                    for (int i = 0; i < oldColors.Length; i++)
                     {
-                        Color32 newColor = new Color32(oldColors[i].r, oldColors[i].g, oldColors[i].b, (byte)((Config.overlayAlpha / 255f) * 255));
-                        oldColors[i] = newColor;
+                        if (oldColors[i].a != 0f)
+                        {
+                            Color32 newColor = new Color32(oldColors[i].r, oldColors[i].g, oldColors[i].b, (byte)((Config.overlayAlpha / 255f) * 255));
+                            oldColors[i] = newColor;
+                        }
                     }
+                    texture.SetPixels32(oldColors);
                 }
-                texture.SetPixels32(oldColors);
+                else if (flip=="both")
+                {
+                    texture = FlipTexture(texture);
+                    Color32[] oldColors = texture.GetPixels32();
+                    for (int i = 0; i < oldColors.Length; i++)
+                    {
+                        if (oldColors[i].a != 0f)
+                        {
+                            Color32 newColor = new Color32(oldColors[i].r, oldColors[i].g, oldColors[i].b, (byte)((Config.overlayAlpha / 255f) * 255));
+                            oldColors[i] = newColor;
+                        }
+                    }
+                    texture.SetPixels32(oldColors);
+                }
                 texture.Apply();
+                return texture;
             }
+            return null;
         }
 
         public static void Unload(GameObject go)
@@ -186,54 +207,49 @@ Precise movement:                                             Hold Ctrl";
             //fit to tiles
             if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.T)))
             {
+                c += 1;
+                if (c == 5) c = 1;
                 switch (c)
                 {
                     case 1:
                         //1x1
                         LoadingExtension.go.transform.localScale = new Vector3(960f, 1f, 960f);
-                        c += 1;
                         break;
                     case 2:
                         //3x3
                         LoadingExtension.go.transform.localScale = new Vector3(2880f, 1f, 2880f);
-                        c += 1;
                         break;
                     case 3:
                         //5x5
                         LoadingExtension.go.transform.localScale = new Vector3(4800f, 1f, 4800f);
-                        c += 1;
                         break;
                     case 4:
                         //9x9
                         LoadingExtension.go.transform.localScale = new Vector3(8640f, 1f, 8640f);
-                        c = 1;
                         break;
                 }
             }
             //cycle through images
             if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.R)))
             {
-                count += 1;
                 string[] files = TextureLoad();
-                if (LoadingExtension.textureDict.ContainsKey(files[count]))
+                //Texture2D texture = LoadingExtension.tex;
+                Texture2D texture = new Texture2D(1, 1);
+                if (textureDict.ContainsKey(files[count]))
                 {
-                    LoadingExtension.tex = LoadingExtension.textureDict[files[count]];
+                    texture = textureDict[files[count]];
                 }
                 else
                 {
                     byte[] bytes = File.ReadAllBytes(files[count]);
-                    LoadingExtension.tex.LoadImage(bytes);
-                    ApplyOpacity();
-                    LoadingExtension.tex = FlipTexture(LoadingExtension.tex);
-                    LoadingExtension.textureDict.Add(files[count], LoadingExtension.tex);
+                    texture.LoadImage(bytes);
+                    texture = ApplyOpacity(texture, "both");
+                    textureDict.Add(files[count], texture);
                 }
-                for (int i = 0; i < LoadingExtension.textureDict.Count; i++)
-                {
-                    Debug.Log(LoadingExtension.textureDict[files[i]]);
-                }
-                
+                texture.Apply();
+                LoadingExtension.tex = texture;
+                count += 1;
                 if (count==files.Length) count = 0;
-                
             }
             //Position
             if (isMovable && (Input.GetKey(KeyCode.Keypad8) || shiftDown && Input.GetKey(KeyCode.UpArrow))) // UP
