@@ -21,7 +21,8 @@ Move:                                                                    Shift +
 Enlarge:                                                                 Shift + plus(+) or keypad 3
 Reduce:                                                                  Shift + minus(-) or keypad 1
 
-Precise movement:                                             Hold Ctrl";
+Precise movement:                                             Hold Ctrl
+Fast movement:                                             Hold Ctrl + Alt";
 
         public string Description
         {
