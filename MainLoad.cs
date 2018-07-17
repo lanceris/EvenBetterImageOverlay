@@ -258,6 +258,16 @@ Fast movement:                                             Hold Ctrl + Alt";
                 transform.position += new Vector3(positionDelta, 0f, 0f);
             }
 
+            //Rotate
+            if (isMovable && (Input.GetKey(KeyCode.Keypad7))) //rotating clockwise revert
+            {
+                transform.localEulerAngles -= rotationDelta;
+            }
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad9))) //rotating clockwise
+            {
+                transform.localEulerAngles += rotationDelta;
+            }
+
             //Scale
             if (isMovable && (Input.GetKey(KeyCode.Keypad3) || shiftDown && Input.GetKey(KeyCode.Equals)))
             {
@@ -312,12 +322,21 @@ Fast movement:                                             Hold Ctrl + Alt";
             float x = MainLoad.ps.x, y = MainLoad.ps.z;
             float sclx = MainLoad.sc.x, scly = MainLoad.sc.z;
 
+
+            Quaternion rot = Quaternion.Euler(MainLoad.rt.x, MainLoad.rt.y, MainLoad.rt.z);
+            Vector3 center = new Vector3(x, 0, y);
             Quad3 position = new Quad3(
-                new Vector3(-sclx + x, 0, -scly + y),//lefttop 1
-                new Vector3(sclx + x, 0, -scly + y),//righttop 2
-                new Vector3(sclx + x, 0, scly + y),//rightbottom 3 
-                new Vector3(-sclx + x, 0, scly + y)//leftbottom 4
-                );
+                            new Vector3(-sclx + x, 0, -scly + y),//lefttop 1
+                            new Vector3(sclx + x, 0, -scly + y),//righttop 2
+                            new Vector3(sclx + x, 0, scly + y),//rightbottom 3 
+                            new Vector3(-sclx + x, 0, scly + y)//leftbottom 4
+            );
+            position.a = rot * (position.a - center) + center;
+            position.b = rot * (position.b - center) + center;
+            position.c = rot * (position.c - center) + center;
+            position.d = rot * (position.d - center) + center;
+
+            
             RenderManager.instance.OverlayEffect.DrawQuad(cameraInfo, LoadingExtension.tex, Color.white, position, -1f, 1800f, false, true);
             
         }
