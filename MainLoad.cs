@@ -41,7 +41,7 @@ Fast movement:                                             Hold Ctrl + Alt";
             {
                 Config.overlayAlpha = f;
                 Config.ins.SaveConfig();
-                slider.tooltip = $"{Mathf.Floor((Config.overlayAlpha / 255f)*100)}%\n\nSet opacity level for overlay.";
+                slider.tooltip = $"{Mathf.Floor((Config.overlayAlpha / 255f) * 100)}%\n\nSet opacity level for overlay.";
                 slider.RefreshTooltip();
             });
             slider.width = 510f;
@@ -62,7 +62,7 @@ Fast movement:                                             Hold Ctrl + Alt";
         public static GameObject go;
         public static Texture2D tex;
         public static bool levelLoaded;
-        
+
         public override void OnLevelLoaded(LoadMode mode)
         {
             levelLoaded = true;
@@ -102,7 +102,7 @@ Fast movement:                                             Hold Ctrl + Alt";
         public static bool active = true;
         int count = 0;
         int c = 1;
-        
+
         public static Texture2D FlipTexture(Texture2D textureToFlip)
         {
             Texture2D texture = new Texture2D(textureToFlip.width, textureToFlip.height);
@@ -128,11 +128,11 @@ Fast movement:                                             Hold Ctrl + Alt";
             ApplyOpacity(LoadingExtension.tex, "no");
         }
 
-        public static Texture2D ApplyOpacity(Texture2D texture , string flip)
+        public static Texture2D ApplyOpacity(Texture2D texture, string flip)
         {
             if (LoadingExtension.levelLoaded)
             {
-                if (flip=="no")
+                if (flip == "no")
                 {
                     Color32[] oldColors = texture.GetPixels32();
                     for (int i = 0; i < oldColors.Length; i++)
@@ -145,7 +145,7 @@ Fast movement:                                             Hold Ctrl + Alt";
                     }
                     texture.SetPixels32(oldColors);
                 }
-                else if (flip=="both")
+                else if (flip == "both")
                 {
                     texture = FlipTexture(texture);
                     Color32[] oldColors = texture.GetPixels32();
@@ -190,7 +190,7 @@ Fast movement:                                             Hold Ctrl + Alt";
             else { speedModifier = 1f; }
 
             float positionDelta = 400f * speedModifier * Time.deltaTime;
-            Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier;
+            Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier / 5.0f;
             Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
             //fit to tiles
@@ -238,7 +238,7 @@ Fast movement:                                             Hold Ctrl + Alt";
                 texture.Apply();
                 LoadingExtension.tex = texture;
                 count += 1;
-                if (count==files.Length) count = 0;
+                if (count == files.Length) count = 0;
             }
             //Position
             if (isMovable && (Input.GetKey(KeyCode.Keypad8) || shiftDown && Input.GetKey(KeyCode.UpArrow))) // UP
@@ -330,15 +330,15 @@ Fast movement:                                             Hold Ctrl + Alt";
                             new Vector3(sclx + x, 0, -scly + y),//righttop 2
                             new Vector3(sclx + x, 0, scly + y),//rightbottom 3 
                             new Vector3(-sclx + x, 0, scly + y)//leftbottom 4
-            );
+                );
             position.a = rot * (position.a - center) + center;
             position.b = rot * (position.b - center) + center;
             position.c = rot * (position.c - center) + center;
             position.d = rot * (position.d - center) + center;
 
-            
+
             RenderManager.instance.OverlayEffect.DrawQuad(cameraInfo, LoadingExtension.tex, Color.white, position, -1f, 1800f, false, true);
-            
+
         }
     }
 }
