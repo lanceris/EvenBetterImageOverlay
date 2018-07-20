@@ -191,6 +191,7 @@ Fast movement:                                             Hold Ctrl + Alt";
 
             float positionDelta = 400f * speedModifier * Time.deltaTime;
             Vector3 rotationDelta = new Vector3(0f, 1f, 0f) * speedModifier / 5.0f;
+            Vector3 rotate90Degree = new Vector3(0f, 90f, 0f);
             Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
             //fit to tiles
@@ -268,6 +269,16 @@ Fast movement:                                             Hold Ctrl + Alt";
                 transform.localEulerAngles += rotationDelta;
             }
 
+        //Rotate 90 degrees
+            if (isMovable && (Input.GetKeyDown(KeyCode.LeftBracket) && shiftDown)) //rotating clockwise revert
+            {
+                transform.localEulerAngles -= rotate90Degree;
+            }
+            
+            if (isMovable && (Input.GetKeyDown(KeyCode.RightBracket) && shiftDown)) //rotating clockwise
+            {
+                transform.localEulerAngles += rotate90Degree;
+            }
 
 
             //Scale
