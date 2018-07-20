@@ -259,14 +259,16 @@ Fast movement:                                             Hold Ctrl + Alt";
             }
 
             //Rotate
-            if (isMovable && (Input.GetKey(KeyCode.Keypad7))) //rotating clockwise revert
+            if (isMovable && (Input.GetKey(KeyCode.Keypad7) || shiftDown && Input.GetKey(KeyCode.Q))) //rotating clockwise revert
             {
                 transform.localEulerAngles -= rotationDelta;
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad9))) //rotating clockwise
+            else if (isMovable && (Input.GetKey(KeyCode.Keypad9) || shiftDown && Input.GetKey(KeyCode.E))) //rotating clockwise
             {
                 transform.localEulerAngles += rotationDelta;
             }
+
+
 
             //Scale
             if (isMovable && (Input.GetKey(KeyCode.Keypad3) || shiftDown && Input.GetKey(KeyCode.Equals)))
