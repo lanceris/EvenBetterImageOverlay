@@ -10,19 +10,15 @@ namespace EvenBetterImageOverlay
     public class EvenBetterImageOverlay : IUserMod
     {
         private UISlider slider;
-        public string helperText = @"Toggle overlay:                                                  Shift + Enter or keypad Enter
-Cycle through images:                                      Shift + R
-Lock:                                                                     Shift + V or keypad 5
-Auto fit image to 1x1...9x9 tiles:                      Shift +T
-Reset to default position and rotation:        Shift + B
-
-Move:                                                                    Shift + arrows or keypad arrows
+        public string helperText = @"Move:                                                                    Shift + arrows or keypad arrows
 
 Enlarge:                                                                 Shift + plus(+) or keypad 3
 Reduce:                                                                  Shift + minus(-) or keypad 1
 
 Precise movement:                                             Hold Ctrl
 Fast movement:                                             Hold Ctrl + Alt";
+
+        public const string settingsFileName = "ImageOverlay";
 
         public string Description
         {
@@ -36,7 +32,11 @@ Fast movement:                                             Hold Ctrl + Alt";
 
         public void OnSettingsUI(UIHelperBase helper)
         {
-            helper.AddSpace(20);
+            UIHelperBase group = helper.AddGroup(Name);
+            UIPanel panel = ((UIHelper)group).self as UIPanel;
+
+            group.AddSpace(20);
+
             slider = (UISlider)helper.AddSlider("Overlay Alpha", 1f, 255f, 1f, Config.overlayAlpha, (f) =>
             {
                 Config.overlayAlpha = f;
@@ -49,10 +49,19 @@ Fast movement:                                             Hold Ctrl + Alt";
             slider.color = Color.cyan;
             slider.scrollWheelAmount = 1f;
             slider.tooltip = $"{Mathf.Floor((Config.overlayAlpha / 255f) * 100)}%\n\nSet opacity level for overlay.";
-            helper.AddSpace(20);
-            helper.AddButton("Apply", MainLoad.Kek);
-            helper.AddSpace(20);
-            helper.AddGroup(helperText);
+            group.AddSpace(20);
+            group.AddButton("Apply", MainLoad.Kek);
+
+            group.AddSpace(10);
+            group = helper.AddGroup("Main keybindings");
+            panel = ((UIHelper)group).self as UIPanel;
+            group.AddSpace(10);
+
+            ((UIPanel)((UIHelper)group).self).gameObject.AddComponent<MainOptionsKeyMappings>();
+
+            group.AddSpace(10);
+            group = helper.AddGroup("Movement keybindings");
+            group.AddGroup(helperText);
         }
     }
 
@@ -195,7 +204,7 @@ Fast movement:                                             Hold Ctrl + Alt";
             Vector3 scaleDelta = new Vector3(2.5f, 0f, 2.5f) * speedModifier;
 
             //fit to tiles
-            if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.T)))
+            if (isMovable && OptionsKeyMapping.autoFitImage.IsKeyUp())
             {
                 c += 1;
                 if (c == 5) c = 1;
@@ -220,7 +229,7 @@ Fast movement:                                             Hold Ctrl + Alt";
                 }
             }
             //cycle through images
-            if (isMovable && (shiftDown && Input.GetKeyDown(KeyCode.R)))
+            if (isMovable && OptionsKeyMapping.cycleThroughImages.IsKeyUp())
             {
                 string[] files = TextureLoad();
                 //Texture2D texture = LoadingExtension.tex;
@@ -260,11 +269,11 @@ Fast movement:                                             Hold Ctrl + Alt";
             }
 
             //Rotate
-            if (isMovable && (Input.GetKey(KeyCode.Keypad7) || shiftDown && Input.GetKey(KeyCode.Q))) //rotating clockwise revert
+            if (isMovable && OptionsKeyMapping.rotateCounterClockwise.IsPressed()) //rotating clockwise revert
             {
                 transform.localEulerAngles -= rotationDelta;
             }
-            else if (isMovable && (Input.GetKey(KeyCode.Keypad9) || shiftDown && Input.GetKey(KeyCode.E))) //rotating clockwise
+            else if (isMovable && OptionsKeyMapping.rotateClockwise.IsPressed()) //rotating clockwise
             {
                 transform.localEulerAngles += rotationDelta;
             }
@@ -292,7 +301,7 @@ Fast movement:                                             Hold Ctrl + Alt";
             }
 
             //Toggle active
-            if (Input.GetKeyDown(KeyCode.KeypadEnter) || shiftDown && Input.GetKeyDown(KeyCode.Return))
+            if (OptionsKeyMapping.toggleOverlay.IsKeyUp())
             {
                 if (!active)
                 {
@@ -307,13 +316,13 @@ Fast movement:                                             Hold Ctrl + Alt";
             }
 
             //Lock
-            if (Input.GetKeyDown(KeyCode.Keypad5) || shiftDown && Input.GetKeyDown(KeyCode.V))
+            if (OptionsKeyMapping.lockImage.IsKeyUp())
             {
                 if (active) isMovable = !isMovable;
             }
 
             //Reset position to default
-            if (isMovable && (shiftDown && Input.GetKey(KeyCode.B)))
+            if (isMovable && OptionsKeyMapping.resetImage.IsKeyUp())
             {
                 transform.eulerAngles = new Vector3(0f, 180f, 0f);
                 transform.position = new Vector3(0f, 200f, 0f);
