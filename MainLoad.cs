@@ -1,7 +1,9 @@
 ﻿using ICities;
 using UnityEngine;
+using System;
 using System.IO;
 using System.Collections.Generic;
+using ColossalFramework;
 using ColossalFramework.UI;
 using ColossalFramework.Math;
 
@@ -18,7 +20,7 @@ Reduce:                                                                  Shift +
 Precise movement:                                             Hold Ctrl
 Fast movement:                                             Hold Ctrl + Alt";
 
-        public const string settingsFileName = "ImageOverlay";
+        public const string keyBindingsSettingsFileName = "ImageOverlayKeyBindings";
 
         public string Description
         {
@@ -28,6 +30,22 @@ Fast movement:                                             Hold Ctrl + Alt";
         public string Name
         {
             get { return "Image Overlay"; }
+        }
+
+        public EvenBetterImageOverlay()
+        {
+            try
+            {
+                // Creating setting file
+                if (GameSettings.FindSettingsFileByName(EvenBetterImageOverlay.keyBindingsSettingsFileName) == null)
+                {
+                    GameSettings.AddSettingsFile(new SettingsFile[] { new SettingsFile() { fileName = EvenBetterImageOverlay.keyBindingsSettingsFileName } });
+                }
+            }
+            catch
+            {
+                // We could catch the exception here
+            }
         }
 
         public void OnSettingsUI(UIHelperBase helper)

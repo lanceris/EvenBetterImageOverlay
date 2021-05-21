@@ -12,15 +12,15 @@ namespace EvenBetterImageOverlay {
         protected SavedInputKey editingBinding;
         protected string editingBindingCategory;
 
-        public static readonly SavedInputKey toggleOverlay = new SavedInputKey("toggleOverlay", EvenBetterImageOverlay.settingsFileName, SavedInputKey.Encode(KeyCode.KeypadEnter, false, false, false), true);
+        public static readonly SavedInputKey toggleOverlay = new SavedInputKey("toggleOverlay", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.KeypadEnter, false, false, false), true);
         
-        public static readonly SavedInputKey cycleThroughImages = new SavedInputKey("cycleThroughImages", EvenBetterImageOverlay.settingsFileName, SavedInputKey.Encode(KeyCode.R, false, true, false), true);
-        public static readonly SavedInputKey lockImage = new SavedInputKey("lockImage", EvenBetterImageOverlay.settingsFileName, SavedInputKey.Encode(KeyCode.V, false, true, false), true);
-        public static readonly SavedInputKey autoFitImage = new SavedInputKey("autoFitImage", EvenBetterImageOverlay.settingsFileName, SavedInputKey.Encode(KeyCode.T, false, true, false), true);
-        public static readonly SavedInputKey resetImage = new SavedInputKey("resetImage", EvenBetterImageOverlay.settingsFileName, SavedInputKey.Encode(KeyCode.B, false, true, false), true);
+        public static readonly SavedInputKey cycleThroughImages = new SavedInputKey("cycleThroughImages", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.R, false, true, false), true);
+        public static readonly SavedInputKey lockImage = new SavedInputKey("lockImage", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.V, false, true, false), true);
+        public static readonly SavedInputKey autoFitImage = new SavedInputKey("autoFitImage", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.T, false, true, false), true);
+        public static readonly SavedInputKey resetImage = new SavedInputKey("resetImage", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.B, false, true, false), true);
 
-        public static readonly SavedInputKey rotateClockwise = new SavedInputKey("rotateClockwise", EvenBetterImageOverlay.settingsFileName, SavedInputKey.Encode(KeyCode.Keypad9, false, false, false), true);
-        public static readonly SavedInputKey rotateCounterClockwise = new SavedInputKey("rotateCounterClockwise", EvenBetterImageOverlay.settingsFileName, SavedInputKey.Encode(KeyCode.Keypad7, false, false, false), true);
+        public static readonly SavedInputKey rotateClockwise = new SavedInputKey("rotateClockwise", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.Keypad9, false, false, false), true);
+        public static readonly SavedInputKey rotateCounterClockwise = new SavedInputKey("rotateCounterClockwise", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.Keypad7, false, false, false), true);
 
         protected int count = 0;
 
