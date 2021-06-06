@@ -11,8 +11,11 @@
             AddKeyMapping("Fit image to 1x1, 2x2, 5x5 or 9x9", autoFitImage);
             AddKeyMapping("Reset image to default position and size", resetImage);
 
-            AddKeyMapping("Rotate image clockwise", rotateClockwise);
             AddKeyMapping("Rotate image counter clockwise", rotateCounterClockwise);
+            AddKeyMapping("Rotate image clockwise", rotateClockwise);
+
+            AddKeyMapping("Rotate image by 90 degrees counter clockwise", rotate90DegreesCounterClockwise);
+            AddKeyMapping("Rotate image by 90 degrees clockwise", rotate90DegreesClockwise);
         }
     }
 }

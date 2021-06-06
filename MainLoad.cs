@@ -296,17 +296,16 @@ Fast movement:                                             Hold Ctrl + Alt";
                 transform.localEulerAngles += rotationDelta;
             }
 
-        //Rotate 90 degrees
-            if (isMovable && (Input.GetKeyDown(KeyCode.LeftBracket) && shiftDown)) //rotating clockwise revert
+            //Rotate 90 degrees
+            if (isMovable && OptionsKeyMapping.rotate90DegreesCounterClockwise.IsKeyUp()) //rotating clockwise revert
             {
                 transform.localEulerAngles -= rotate90Degree;
             }
             
-            if (isMovable && (Input.GetKeyDown(KeyCode.RightBracket) && shiftDown)) //rotating clockwise
+            if (isMovable && OptionsKeyMapping.rotate90DegreesClockwise.IsKeyUp()) //rotating clockwise
             {
                 transform.localEulerAngles += rotate90Degree;
             }
-
 
             //Scale
             if (isMovable && (Input.GetKey(KeyCode.Keypad3) || shiftDown && Input.GetKey(KeyCode.Equals)))

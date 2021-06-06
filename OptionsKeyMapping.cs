@@ -22,6 +22,9 @@ namespace EvenBetterImageOverlay {
         public static readonly SavedInputKey rotateClockwise = new SavedInputKey("rotateClockwise", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.Keypad9, false, false, false), true);
         public static readonly SavedInputKey rotateCounterClockwise = new SavedInputKey("rotateCounterClockwise", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.Keypad7, false, false, false), true);
 
+        public static readonly SavedInputKey rotate90DegreesClockwise = new SavedInputKey("rotateCounterClockwise", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.RightBracket, false, true, false), true);
+        public static readonly SavedInputKey rotate90DegreesCounterClockwise = new SavedInputKey("rotate90DegreesCounterClockwise", EvenBetterImageOverlay.keyBindingsSettingsFileName, SavedInputKey.Encode(KeyCode.LeftBracket, false, true, false), true);
+
         protected int count = 0;
 
         protected void AddKeyMapping(string label, SavedInputKey savedInputKey)
